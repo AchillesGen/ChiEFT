@@ -1,0 +1,46 @@
+# Example Sherpa run card for the ChiPT UFO model.
+# Template only: set BEAMS, BEAM_ENERGIES and PROCESSES for your study.
+
+# general settings
+EVENTS: 100
+EVENT_GENERATION_MODE: Weighted
+
+# matrix elements
+ME_GENERATORS: Comix
+CORE_SCALE: VAR{Abs2(p[0]+p[1])}
+
+# model: the UFO directory and its param card (paths relative to the run dir)
+MODEL: ChiPT_UFO
+UFO_PARAM_CARD: param_card.dat
+
+# Uncomment to switch off underlying event, hadronization or shower:
+# MI_HANDLER: None
+# FRAGMENTATION: Off
+# SHOWER_GENERATOR: None
+
+# massless quarks and leptons in the matrix elements
+PARTICLE_DATA:
+  1: {Massive: false}
+  2: {Massive: false}
+  3: {Massive: false}
+  4: {Massive: false}
+  5: {Massive: false}
+  11: {Massive: false}
+  13: {Massive: false}
+  15: {Massive: false}
+
+# beams (placeholder)
+BEAMS: 2212
+BEAM_ENERGIES: 6500
+
+PROCESSES:
+# All 2 -> 2 processes from a parton/hadron container.  CHI is the chiral
+# order (powers of 1/fPi); it must be allowed for hadronic vertices.
+- "93 93 -> (22, 23, 24, -24, 12, -12, 14, -14, 16, -16, 11, -11, 13, -13, 15, -15, 2212, -2212, 2112, -2112, 25, 111, 211, -211, 2224, -2224, 2214, -2214, 2114, -2114, 1114, -1114) (22, 23, 24, -24, 12, -12, 14, -14, 16, -16, 11, -11, 13, -13, 15, -15, 2212, -2212, 2112, -2112, 25, 111, 211, -211, 2224, -2224, 2214, -2214, 2114, -2114, 1114, -1114)":
+    Order: {QED: Any, QCD: Any, CHI: Any}
+    # Write Feynman diagrams to ./diagrams (view with ./plot_graphs diagrams).
+    Print_Graphs: diagrams
+
+SELECTORS: [
+  # phase-space cuts go here
+]
