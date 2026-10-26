@@ -1,0 +1,2621 @@
+ChiPT changes to FeynRules 2.3.49 (https://github.com/FeynRules/FeynRules), GPL-3.0.
+Modified by J. Isaacson <isaacs21@msu.edu>, October 2026:
+  - Mathematica 14 compatibility (Commutator, MatrixSymbol)
+  - Python 3 UFO writer
+  - form factors written into Lorentz structures (UFO 2.0) instead of couplings
+Apply to a fresh FeynRules 2.3.49 with: patch -p1 < feynrules-2.3.49-chipt.patch
+
+diff -ruN a/Core/ClassDeclarations.m b/Core/ClassDeclarations.m
+--- a/Core/ClassDeclarations.m	2026-10-19 06:25:28.687788881 -0400
++++ b/Core/ClassDeclarations.m	2024-11-15 16:02:10.000000000 -0500
+@@ -384,8 +384,9 @@
+     (* Initialize Interaction order hierarchy *)
+     InitializeInteractionOrders[ M$InteractionOrderHierarchy, M$InteractionOrderLimit ];
+ 
++    Print["\n Loading Form Factors", M$FormFactors];
+     (* Declare the form factors *)
+-    If[FR$FormFactors =!= {},
++    If[M$FormFactors =!= {},
+        DeclareFormFactors[M$FormFactors];
+       ];
+ 
+diff -ruN a/Core/ExtractVertexTools.m b/Core/ExtractVertexTools.m
+--- a/Core/ExtractVertexTools.m	2026-10-19 06:25:28.688246118 -0400
++++ b/Core/ExtractVertexTools.m	2025-09-08 11:05:19.000000000 -0400
+@@ -107,7 +107,7 @@
+ OperatorChain[___,0,___] = 0
+ 
+ OperatorChain[x___,field1_,cr_crea,y___] := (*FermionSign[field1, cr[[1]]]*) OperatorChain[x, cr, field1,y] + 
+-            Commutator[field1,cr] OperatorChain[x,y] /; FieldQ[field1];
++            CommutatorFR[field1,cr] OperatorChain[x,y] /; FieldQ[field1];
+ 
+ OperatorChain[x___, b_, cr_crea, y___] := OperatorChain[x, cr, b, y] /; Not[FieldQ[b]];
+ 
+@@ -129,10 +129,10 @@
+ (*Commutation relations*)
+ 
+ 
+-Commutator[del[psi_,mu_], aa_] := delCom[Commutator[psi, aa], mu];
++CommutatorFR[del[psi_,mu_], aa_] := delCom[CommutatorFR[psi, aa], mu];
+ 
+ 
+-Commutator[psi1_, crea[psi2_, inds_, i_]] := KronDelta[psi1, psi2, inds] * uwave[psi2, i] /; 
++CommutatorFR[psi1_, crea[psi2_, inds_, i_]] := KronDelta[psi1, psi2, inds] * uwave[psi2, i] /; 
+       FieldQ[psi1] && FreeQ[psi1, del];
+ 
+ 
+diff -ruN a/Core/FormFactors.m b/Core/FormFactors.m
+--- a/Core/FormFactors.m	2026-10-19 06:25:28.688160120 -0400
++++ b/Core/FormFactors.m	2025-03-03 16:08:05.000000000 -0500
+@@ -208,6 +208,7 @@
+ 
+     (* Check if every form factor appears at most once *)
+     If[Length[#[[2]]] > 1, Message[FormFactor::Vertex, #[[1]]]]& /@ ffverts;
++    If[Length[#[[2]]] > 1, Print[#[[1]], #[[2]]]]& /@ ffverts;
+ 
+     (* Check if particle content matches *)
+     If[Sort[First/@#[[1]]] =!= Sort[First/@#[[2,1]]]&, Message[FormFactor::VertexParticles, #[[1]]]]& /@ ffverts;
+@@ -223,3 +224,5 @@
+ 
+ (* ::Section:: *)
+ (*UFO part*)
++
++GetFormFactorValue[formf_] := FormFactor$Value[formf]
+diff -ruN a/Core/Initialisation.m b/Core/Initialisation.m
+--- a/Core/Initialisation.m	2026-10-19 06:25:28.687920150 -0400
++++ b/Core/Initialisation.m	2025-03-18 09:51:31.000000000 -0400
+@@ -174,6 +174,7 @@
+ 
+ (*second condition added to avoid conflict with IndexDelta[a_?(FreeQ[#,Ext]&), Index[name_, Ext[k_]]] := IndexDelta[Index[name,Ext[k]], a]; *)
+ IndexDelta[Except[Index[Spin, _], i1_], Except[Index[Spin, _], i2_]] := IndexDelta[i2,i1] /; Not[OrderedQ[{i1,i2}]]&&(FreeQ[i2,Ext]&&FreeQ[i1,Ext]||Not[FreeQ[i2,Ext]]&&Not[FreeQ[i1,Ext]]);
++(* IndexDelta /: IndexDelta[Index[Spin, i_], Index[Spin, j_]] . IndexDelta[Index[Spin, j_], Index[Spin, k_]] :=  IndexDelta[i, k] *)
+ 
+ IndexDelta[a_?(FreeQ[#,Index]&), Index[name_, b_]] := IndexDelta[Index[name, a], Index[name, b]];
+ IndexDelta[Index[name_, b_], a_?(FreeQ[#,Index]&)] := IndexDelta[Index[name, a], Index[name, b]];
+@@ -1005,9 +1006,10 @@
+ ProjP /: Dot[g1___, ProjP[r_,s_], g2___] := ProjP[r,s] Dot[g1, g2];
+ ProjM /: Dot[g1___, ProjM[r_,s_], g2___] := ProjM[r,s] Dot[g1, g2];
+ 
++OrderSig[expr_] := expr //. { Sig[mu_, nu_] /; !OrderedQ[{mu, nu}] :> Signature[{mu, nu}] Sig[nu, mu],
++                              Sig[mu_, nu_, r_, s_] /; !OrderedQ[{mu, nu}] :> Signature[{mu, nu}] Sig[nu, mu, r, s]};
+ 
+-
+-
++PerformGaAlgebra[expr_] := expr //. Dispatch[MR$PeformGaAlgebraRules3] //. TensDot[u_?(MR$GammaMatrixQ),v___][r_,s_] -> GaAlgebra[u,v,r,s] //. Dispatch[MR$PeformGaAlgebraRules1] //. Dispatch[MR$PeformGaAlgebraRules2] //. GaTensDot -> TensDot //. Dispatch[MR$PeformGaAlgebraRules1];
+ 
+ (* LRM 16/06/16: Fixed an issue in Mathematica 10.4 by which TensDot would erroneously take leptons as an argument (since these carry 2 indices and accidentally 
+ match these definitions) by adding a qualifier here to limit these definitions to Dirac algebra objects. (Internal functions with variables shared with gamma matrices
+diff -ruN a/Core/MassDiagonalization.m b/Core/MassDiagonalization.m
+--- a/Core/MassDiagonalization.m	2026-10-19 06:25:28.688100478 -0400
++++ b/Core/MassDiagonalization.m	2025-09-08 11:02:29.000000000 -0400
+@@ -305,10 +305,10 @@
+ PutMatrixIndex[id_]:=Block[{gaugeindlist,massindlist,ind,list},
+   (*Initialization*)
+   list=Which[
+-    PRIVATE`Type[id]==="FLR",List[{GaugeBasis[id,"L"],MassBasis[id],MatrixSymbol[id,"L"]},{GaugeBasis[id,"R"],MassBasis[id],MatrixSymbol[id,"R"]}],
+-    PRIVATE`Type[id]==="CWeyl",List[{GaugeBasis[id][[1]],MassBasis[id][[1]],MatrixSymbol[id][[1]]},{GaugeBasis[id][[2]],MassBasis[id][[2]],MatrixSymbol[id][[2]]}],
+-    PRIVATE`Type[id]==="SPS",List[{GaugeBasis[id],MassBasis[id,"S"],MatrixSymbol[id,"S"]},{GaugeBasis[id],MassBasis[id,"PS"],MatrixSymbol[id,"PS"]}],
+-    True,List[{GaugeBasis[id],MassBasis[id],MatrixSymbol[id]}]];
++    PRIVATE`Type[id]==="FLR",List[{GaugeBasis[id,"L"],MassBasis[id],MatrixSymbolFR[id,"L"]},{GaugeBasis[id,"R"],MassBasis[id],MatrixSymbolFR[id,"R"]}],
++    PRIVATE`Type[id]==="CWeyl",List[{GaugeBasis[id][[1]],MassBasis[id][[1]],MatrixSymbolFR[id][[1]]},{GaugeBasis[id][[2]],MassBasis[id][[2]],MatrixSymbolFR[id][[2]]}],
++    PRIVATE`Type[id]==="SPS",List[{GaugeBasis[id],MassBasis[id,"S"],MatrixSymbolFR[id,"S"]},{GaugeBasis[id],MassBasis[id,"PS"],MatrixSymbolFR[id,"PS"]}],
++    True,List[{GaugeBasis[id],MassBasis[id],MatrixSymbolFR[id]}]];
+   (If[#[[3]]==="No matrix symbol found.",Return[]];
+    gaugeindlist=$IndList/@(#[[1]]/.a_?(FieldQ[#]&)[___]:>a);
+    massindlist=$IndList/@(#[[2]]/.a_?(FieldQ[#]&)[___]:>a);
+@@ -1195,7 +1195,7 @@
+     If[out,
+       Print["Tree level mass matrix computations achieved. Only the mass matrices necessary for the C++ code have been computed."];
+       Print["Check FR$MassMatrices for the list of the MixingIDs."];
+-      Print["Use MassMatrix[ MixingID ], GaugeBasis[ MixingID ], MassBasis[ MixingID ], BlockName[ MixingID ] and MatrixSymbol[ MixingID ] "<>
++      Print["Use MassMatrix[ MixingID ], GaugeBasis[ MixingID ], MassBasis[ MixingID ], BlockName[ MixingID ] and MatrixSymbolFR[ MixingID ] "<>
+           "for more information on the results."];
+     ];
+     Return[]
+@@ -1208,7 +1208,7 @@
+     (If[out, 
+       Print["Computation of the tree level mass matrix for the mixing id "<> ToString[#] <>" achieved."];
+       Print["For the results, use MassMatrix[ " <> ToString[#]<>" ], GaugeBasis[ " <> ToString[#]<>" ], MassBasis[ " <> ToString[#]<>" ], "<>
+-            "BlockName [ " <> ToString[#]<>" ] and MatrixSymbol [ "<>ToString[#]<>" ]."]
++            "BlockName [ " <> ToString[#]<>" ] and MatrixSymbolFR[ "<>ToString[#]<>" ]."]
+     ];
+     If[Type[#]==="SPS",Print[ { MatrixForm[MassMatrix[#,"S"]], MatrixForm[MassMatrix[#, "PS"]]} ], Print[MatrixForm[MassMatrix[#]]]])&/@mix;
+     Return[]
+@@ -1325,26 +1325,26 @@
+ (*Getting back a matrix symbol*)
+ 
+ 
+-MatrixSymbol[id_,S]:=MatrixSymbol[id,"S"];
+-MatrixSymbol[id_,PS]:=MatrixSymbol[id,"PS"];
++MatrixSymbolFR[id_,S]:=MatrixSymbolFR[id,"S"];
++MatrixSymbolFR[id_,PS]:=MatrixSymbolFR[id,"PS"];
+ 
+-MatrixSymbol[id_,L]:=MatrixSymbol[id,"L"];
+-MatrixSymbol[id_,R]:=MatrixSymbol[id,"R"];
++MatrixSymbolFR[id_,L]:=MatrixSymbolFR[id,"L"];
++MatrixSymbolFR[id_,R]:=MatrixSymbolFR[id,"R"];
+ 
+ 
+-MatrixSymbol[id_,"S"] := ((MixingMatrix/.FR$MixingRules[Mix[id]])/.MixingMatrix->{"No matrix symbol found.","No matrix symbol found."})[[1]];
++MatrixSymbolFR[id_,"S"] := ((MixingMatrix/.FR$MixingRules[Mix[id]])/.MixingMatrix->{"No matrix symbol found.","No matrix symbol found."})[[1]];
+ 
+-MatrixSymbol[id_,"PS"] := ((MixingMatrix/.FR$MixingRules[Mix[id]])/.MixingMatrix->{"No matrix symbol found.","No matrix symbol found."})[[2]];
++MatrixSymbolFR[id_,"PS"] := ((MixingMatrix/.FR$MixingRules[Mix[id]])/.MixingMatrix->{"No matrix symbol found.","No matrix symbol found."})[[2]];
+ 
+ 
+-MatrixSymbol[id_,letter_?(#==="L" || #==="R"&)] := Block[{resu,num},
++MatrixSymbolFR[id_,letter_?(#==="L" || #==="R"&)] := Block[{resu,num},
+   If[letter==="L", num=1, num=2];
+   resu = MixingMatrix/.FR$MixingRules[Mix[id]]/.Blank->MR$Null/.MR$Null[]->"No matrix symbol found.";
+   If[resu===MixingMatrix, Return["No matrix symbol found."], Return[resu[[num]]]];
+ ]; 
+ 
+ 
+-MatrixSymbol[id_] := Block[{resu},
++MatrixSymbolFR[id_] := Block[{resu},
+   If[Type[id]==="SPS", Message[MassDiag::GBSPS]; Abort[]];
+   If[Type[id]==="FLR", Message[MassDiag::GBFLR]; Abort[]];
+   If[Type[id]==="F4", Message[MassDiag::GBFLR]; Abort[]];
+@@ -1388,13 +1388,13 @@
+ 
+ MixMatrix[id_,"S"] := Block[{val},
+   val=(Value/.FR$MixingRules[Mix[id]]);
+-  If[NoCompute[MatrixSymbol[id,"S"]]===True, Return["This matrix must be given as an external parameter by the user."]];
++  If[NoCompute[MatrixSymbolFR[id,"S"]]===True, Return["This matrix must be given as an external parameter by the user."]];
+   If[val===Value, Return["Please use the numerical code."], Return[val[[1]]/.Value->"Please use the numerical code."]];
+ ];
+ 
+ MixMatrix[id_, "PS"] := Block[{val},
+   val=(Value/.FR$MixingRules[Mix[id]]);
+-  If[NoCompute[MatrixSymbol[id,"PS"]]===True, Return["This matrix must be given as an external parameter by the user."]];
++  If[NoCompute[MatrixSymbolFR[id,"PS"]]===True, Return["This matrix must be given as an external parameter by the user."]];
+   If[val===Value, Return["Please use the numerical code."], Return[val[[2]]/.Value->"Please use the numerical code."]];
+ ];
+ 
+@@ -1402,10 +1402,10 @@
+ MixMatrix[id_,letter_?(#==="L" || #==="R"&)] := Block[{resu,num},
+   If[letter==="L", num=1, num=2];
+   resu = Value/.FR$MixingRules[Mix[id]];
+-  If[NoCompute[MatrixSymbol[id,letter]]===True, Return["This matrix must be given as an external parameter by the user."]];
++  If[NoCompute[MatrixSymbolFR[id,letter]]===True, Return["This matrix must be given as an external parameter by the user."]];
+   If[resu===Value, Return["Please use the numerical code."],resu=resu[[num]]];    
+   If[And@@(MatchQ[#,Rule[_,_]]&/@ resu),
+-    Return[Table[MatrixSymbol[id,letter][iii,jjj],{iii,Length[MassBasis[id]]},{jjj,Length[MassBasis[id]]}]/.resu],
++    Return[Table[MatrixSymbolFR[id,letter][iii,jjj],{iii,Length[MassBasis[id]]},{jjj,Length[MassBasis[id]]}]/.resu],
+     Return[resu]
+   ];
+ ]; 
+@@ -1416,10 +1416,10 @@
+   If[Type[id]==="FLR", Message[MassDiag::GBFLR]; Abort[]];
+   If[Type[id]==="F4", Message[MassDiag::GBFLR]; Abort[]];
+   resu = Value/.FR$MixingRules[Mix[id]];
+-  If[NoCompute[MatrixSymbol[id]]===True, Return["This matrix must be given as an external parameter by the user."]];
++  If[NoCompute[MatrixSymbolFR[id]]===True, Return["This matrix must be given as an external parameter by the user."]];
+   If[resu===Value, Return["Please use the numerical code."]];  
+   If[And@@(MatchQ[#,Rule[_,_]]&/@ resu),
+-    Return[Table[MatrixSymbol[id][iii,jjj],{iii,Length[MassBasis[id]]},{jjj,Length[MassBasis[id]]}]/.resu],
++    Return[Table[MatrixSymbolFR[id][iii,jjj],{iii,Length[MassBasis[id]]},{jjj,Length[MassBasis[id]]}]/.resu],
+     Return[resu]
+   ];
+ ];  
+@@ -1437,12 +1437,12 @@
+     Print["Gauge basis = ",GaugeBasis[sbl]];
+     Print["Scalar sector"];
+     Print["***************************************************"];
+-    Print["  Mass basis = ", MassBasis[sbl,"S"], "\n  Block = ", BlockName[sbl,"S"], "\n  Symbol = ",MatrixSymbol[sbl,"S"]];
++    Print["  Mass basis = ", MassBasis[sbl,"S"], "\n  Block = ", BlockName[sbl,"S"], "\n  Symbol = ",MatrixSymbolFR[sbl,"S"]];
+     Print["  Squared mass matrix = ", MatrixForm[MassMatrix[sbl, "S"]]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "S"]]];
+     Print["Pseudoscalar sector"];
+     Print["***************************************************"];
+-    Print["  Mass basis = ", MassBasis[sbl,"PS"], "\n  Block = ", BlockName[sbl,"PS"], "\n  Symbol = ",MatrixSymbol[sbl,"PS"]];
++    Print["  Mass basis = ", MassBasis[sbl,"PS"], "\n  Block = ", BlockName[sbl,"PS"], "\n  Symbol = ",MatrixSymbolFR[sbl,"PS"]];
+     Print["  Squared mass matrix = ", MatrixForm[MassMatrix[sbl, "PS"]]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "PS"]]];
+     Return[];
+@@ -1453,12 +1453,12 @@
+     Print["Left-handed fermions"];
+     Print["****************************************************"];    
+     Print["  Gauge basis = ",GaugeBasis[sbl, "L"]];
+-    Print["  Block = ", BlockName[sbl,"L"], "\n  Symbol = ",MatrixSymbol[sbl,"L"]];    
++    Print["  Block = ", BlockName[sbl,"L"], "\n  Symbol = ",MatrixSymbolFR[sbl,"L"]];    
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "L"]]];    
+     Print["Right-handed fermions"];
+     Print["****************************************************"];
+     Print["  Gauge basis = ",GaugeBasis[sbl, "R"]];
+-    Print["  Block = ", BlockName[sbl,"R"], "\n  Symbol = ",MatrixSymbol[sbl,"R"]];
++    Print["  Block = ", BlockName[sbl,"R"], "\n  Symbol = ",MatrixSymbolFR[sbl,"R"]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "R"]]];
+     Return[];
+   ];
+@@ -1468,11 +1468,11 @@
+     Print["Mass matrix = ", MatrixForm[MassMatrix[sbl]]];
+     Print["Left-handed fermions"];
+     Print["****************************************************"];
+-    Print["  Block = ", BlockName[sbl,"L"], "\n  Symbol = ",MatrixSymbol[sbl,"L"]];    
++    Print["  Block = ", BlockName[sbl,"L"], "\n  Symbol = ",MatrixSymbolFR[sbl,"L"]];    
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "L"]]];
+     Print["Right-handed fermions"];
+     Print["****************************************************"];
+-    Print["  Block = ", BlockName[sbl,"R"], "\n  Symbol = ",MatrixSymbol[sbl,"R"]];
++    Print["  Block = ", BlockName[sbl,"R"], "\n  Symbol = ",MatrixSymbolFR[sbl,"R"]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "R"]]];
+     Return[];
+   ];
+@@ -1482,18 +1482,18 @@
+     Print["****************************************************"];    
+     Print["  Mass basis = ", MassBasis[sbl][[1]]];    
+     Print["  Gauge basis = ",GaugeBasis[sbl][[1]]];
+-    Print["  Block = ", BlockName[sbl][[1]], "\n  Symbol = ",MatrixSymbol[sbl][[1]]];
++    Print["  Block = ", BlockName[sbl][[1]], "\n  Symbol = ",MatrixSymbolFR[sbl][[1]]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "L"]]];
+     Print["Second basis of charged Weyl fermions"];
+     Print["****************************************************"];    
+     Print["  Mass basis = ", MassBasis[sbl][[2]]];    
+     Print["  Gauge basis = ",GaugeBasis[sbl][[2]]];
+-    Print["  Block = ", BlockName[sbl][[2]], "\n  Symbol = ",MatrixSymbol[sbl][[2]]];
++    Print["  Block = ", BlockName[sbl][[2]], "\n  Symbol = ",MatrixSymbolFR[sbl][[2]]];
+     Print["  Mixing matrix = ", MatrixForm[MixMatrix[sbl, "R"]]];    
+     Return[];
+   ];
+   Print["Gauge basis = ",GaugeBasis[sbl]];
+-  Print["Mass basis = ", MassBasis[sbl], "\nBlock = ", BlockName[sbl], "\nSymbol = ",MatrixSymbol[sbl]];
++  Print["Mass basis = ", MassBasis[sbl], "\nBlock = ", BlockName[sbl], "\nSymbol = ",MatrixSymbolFR[sbl]];
+   Print["Squared mass matrix = ", MatrixForm[MassMatrix[sbl]]];
+   Print["The mixing matrix = ", MatrixForm[MixMatrix[sbl]]];
+   Return[];
+diff -ruN a/Core/VertexRoutine.m b/Core/VertexRoutine.m
+--- a/Core/VertexRoutine.m	2026-10-19 06:25:28.688686023 -0400
++++ b/Core/VertexRoutine.m	2025-01-23 14:57:31.000000000 -0500
+@@ -684,6 +684,7 @@
+   (* Finalizing the Feynman rule*)
+   If[FR$FExpand,
+     vtemp = Expand[MakeSlashedMatrix[LorentzContract[PerformGaAlgebra[#]]]]&/@vtemp; 
++    vtemp = OrderSig[#]&/@vtemp;
+     vtemp = Expand[# /. HC -> $HCExtractVertex /. $HCExtractVertex[t_?(TensQ)][ind___] -> $HCExtractVertex[t[ind]] //. MR$Definitions/. Dot -> FR$Dot /. FR$Dot -> Dot]&/@vtemp; 
+     vtemp = Expand[# /. delta -> IndexDelta /. {NTIndex -> Index, NTI -> Index}]&/@vtemp; 
+     vtemp = Expand[# /.$HCExtractVertex[t_?(TensQ)[xx___, i_, j_]] -> Conjugate[t[xx, j, i]]/. $HCExtractVertex -> HC]&/@vtemp; 
+diff -ruN a/FeynRulesPackage.m b/FeynRulesPackage.m
+--- a/FeynRulesPackage.m	2026-10-19 06:25:28.678108892 -0400
++++ b/FeynRulesPackage.m	2025-09-08 11:02:40.000000000 -0400
+@@ -1280,7 +1280,7 @@
+ 
+ MassMatrix::usage="Convert a mass matrix name ot the corresponding analytical matrix";
+ 
+-MatrixSymbol::usage="Get the symbol used for a mixing matrix";
++MatrixSymbolFR::usage="Get the symbol used for a mixing matrix";
+ 
+ MixMatrix::usage="Get the predefined value of a mixing matrix";
+ 
+diff -ruN a/Interfaces/AspergeInterface.m b/Interfaces/AspergeInterface.m
+--- a/Interfaces/AspergeInterface.m	2026-10-19 06:25:28.683530587 -0400
++++ b/Interfaces/AspergeInterface.m	2025-09-08 11:02:59.000000000 -0400
+@@ -329,7 +329,7 @@
+ (*This function is only used when the mass diagonalisation is needed.*)
+ (*It appends to the files Parameters.cpp Parameters.hpp and main.cpp all the necessary declarations/initialisations and definitions needed to perform the diagonalisation.*)
+ (*First step in the calculation consists in storing for every mass matrix that has been calculated the following informations:*)
+-(*List[ MatrixSymbol, BlockName, Size of the matrix, the analytical expression of the matrix ]*)
++(*List[ MatrixSymbolFR, BlockName, Size of the matrix, the analytical expression of the matrix ]*)
+ 
+ 
+ CalculatePDGFLR[field_]:=Block[{resu},
+@@ -351,7 +351,7 @@
+  tmpdef=Which[
+     (*Dirac Fermions*)
+     Type[#]==="FLR",
+-      matrixsymbol=ToString[MatrixSymbol[#,"L"]];
++      matrixsymbol=ToString[MatrixSymbolFR[#,"L"]];
+       blockname=ToString/@List[BlockName[#,"L"],BlockName[#,"R"]];
+       massmatrix=DefinitionsToStrings/@((Expand[List[MassMatrix[#].ConjugateTranspose[MassMatrix[#]], ConjugateTranspose[MassMatrix[#]].MassMatrix[#] ]]/.n_?(NumericQ[#]&)*pars__:>N[n,30]*pars)/.Index[typ_,num_]:>num);
+       pdgids=ToString/@(Sort/@List[CalculatePDGFLR/@MassBasis[#],CalculatePDGFLR/@MassBasis[#]]); 
+@@ -360,7 +360,7 @@
+ 
+ (*Charged Weyls*)
+    Type[#]==="CWeyl",
+-      matrixsymbol=ToString/@(List[MatrixSymbol[#][[1]],MatrixSymbol[#][[2]]]);
++      matrixsymbol=ToString/@(List[MatrixSymbolFR[#][[1]],MatrixSymbolFR[#][[2]]]);
+       blockname =ToString/@List[BlockName[#][[1]],BlockName[#][[2]]];
+       massmatrix=DefinitionsToStrings/@((Expand[List[MassMatrix[#].ConjugateTranspose[MassMatrix[#]],ConjugateTranspose[MassMatrix[#]].MassMatrix[#]]]/.n_?(NumericQ[#]&)*pars__:>N[n,30]*pars)/.Index[typ_,num_]:>num);
+       pdgids=ToString/@(List[Sort[CalculatePDGWeyl/@MassBasis[#][[1]]],-Sort[CalculatePDGWeyl/@MassBasis[#][[2]]]]);
+@@ -369,7 +369,7 @@
+       Sequence@@List[liste[[All,1]],liste[[All,2]]],
+     (*Scalars and pseudo scalars*)
+     Type[#]==="SPS",
+-      matrixsymbol=ToString/@(List[MatrixSymbol[#,"S"],MatrixSymbol[#,"PS"]]);
++      matrixsymbol=ToString/@(List[MatrixSymbolFR[#,"S"],MatrixSymbolFR[#,"PS"]]);
+       blockname=ToString/@List[BlockName[#,"S"],BlockName[#,"PS"]];
+       massmatrix=DefinitionsToStrings/@((Expand[List[MassMatrix[#,"S"], MassMatrix[#,"PS"]]]/.n_?(NumericQ[#]&)*pars__:>N[n,30]*pars)/.Index[typ_,num_]:>num);
+       pdgids=ToString/@(Sort/@List[CalculatePDGFLR/@MassBasis[#,"S"],CalculatePDGFLR/@MassBasis[#,"PS"]]);
+@@ -380,14 +380,14 @@
+     True,
+ (*It could be a neutral Weyl*)
+       If[WeylFieldQ[First[MassBasis[#]]]===True,
+-        matrixsymbol=ToString[MatrixSymbol[#]];
++        matrixsymbol=ToString[MatrixSymbolFR[#]];
+         blockname=ToString[BlockName[#]];
+         massmatrix=DefinitionsToStrings[(Expand[MassMatrix[#]]/.n_?(NumericQ[#]&)*pars__:>N[n,30]*pars)/.Index[typ_,num_]:>num];
+         pdgids=ToString[Sort[CalculatePDGWeyl/@MassBasis[#]]];
+         massbasis=ToString/@(MassBasis[#]/.part_[n_Integer,_]:>part[n]);
+         liste=List[matrixsymbol,blockname,ToString[Length[massbasis]],massmatrix,pdgids,massbasis,"nsq"],
+ (*or a vector field*)
+-        matrixsymbol=ToString[MatrixSymbol[#]];
++        matrixsymbol=ToString[MatrixSymbolFR[#]];
+         blockname=ToString[BlockName[#]];
+         massmatrix=DefinitionsToStrings[Expand[MassMatrix[#]]/.Index[typ_,num_]:>num];
+         pdgids=ToString[Sort[CalculatePDGFLR/@MassBasis[#]]];
+diff -ruN a/Interfaces/UFO/Model/function_library.py b/Interfaces/UFO/Model/function_library.py
+--- a/Interfaces/UFO/Model/function_library.py	2026-10-19 06:25:28.684034069 -0400
++++ b/Interfaces/UFO/Model/function_library.py	2024-11-15 16:02:10.000000000 -0500
+@@ -8,11 +8,12 @@
+ #
+ #
+ 
++from __future__ import absolute_import
+ __date__ = "22 July 2010"
+ __author__ = "claude.duhr@durham.ac.uk"
+ 
+ import cmath
+-from object_library import all_functions, Function
++from .object_library import all_functions, Function
+ 
+ #
+ # shortcuts for functions from cmath
+diff -ruN a/Interfaces/UFO/Model/__init__.py b/Interfaces/UFO/Model/__init__.py
+--- a/Interfaces/UFO/Model/__init__.py	2026-10-19 06:25:28.684052946 -0400
++++ b/Interfaces/UFO/Model/__init__.py	2025-10-22 23:45:52.000000000 -0400
+@@ -1,14 +1,11 @@
+-
+-import particles
+-import couplings
+-import lorentz
+-import parameters
+-import vertices
+-import coupling_orders
+-#import write_param_card
+-import propagators
+-import object_library
+-import function_library
++from . import particles
++from . import couplings
++from . import lorentz
++from . import parameters
++from . import vertices
++from . import coupling_orders
++from . import write_param_card
++from . import propagators
+ 
+ 
+ all_particles = particles.all_particles
+@@ -21,21 +18,21 @@
+ all_propagators = propagators.all_propagators
+ 
+ try:
+-   import decays
++   from . import decays
+ except ImportError:
+    pass
+ else:
+    all_decays = decays.all_decays
+ 
+ try:
+-   import form_factors
++   from . import form_factors
+ except ImportError:
+    pass
+ else:
+    all_form_factors = form_factors.all_form_factors
+ 
+ try:
+-   import CT_vertices
++   from . import CT_vertices
+ except ImportError:
+    pass
+ else:
+diff -ruN a/Interfaces/UFO/Model/object_library.py b/Interfaces/UFO/Model/object_library.py
+--- a/Interfaces/UFO/Model/object_library.py	2026-10-19 06:25:28.684084548 -0400
++++ b/Interfaces/UFO/Model/object_library.py	2025-10-22 23:49:51.000000000 -0400
+@@ -172,14 +172,18 @@
+ 
+ class CTParameter(UFOBaseClass):
+ 
+-    require_args=['name', 'type', 'value', 'texname']
++    require_args=['name', 'nature,', 'type', 'value', 'texname']
+ 
+     def __init__(self, name, type, value, texname):
+ 
+-        args = (name,type,value,texname)
++        args = (name,'internal',type,value,texname)
+ 
+         UFOBaseClass.__init__(self, *args)
+ 
++        args=(name,'internal',type,value,texname)
++
++        self.nature='interal'
++
+         global all_CTparameters
+         all_CTparameters.append(self)
+ 
+@@ -252,7 +256,7 @@
+         parameter or just a string which can possibly contain CTparameter defining the Laurent serie."""
+         
+         if isinstance(self.value,dict):
+-            if -x in self.value.keys():
++            if -x in list(self.value.keys()):
+                 return self.value[-x]
+             else:
+                 return 'ZERO'
+@@ -265,9 +269,9 @@
+                if not CTparam:
+                    CTparam=param
+                else:
+-                   raise UFOError, "UFO does not support yet more than one occurence of CTParameters in the couplings values."
++                   raise UFOError("UFO does not support yet more than one occurence of CTParameters in the couplings values.")
+            elif numberOfMatches>1:
+-               raise UFOError, "UFO does not support yet more than one occurence of CTParameters in the couplings values."
++               raise UFOError("UFO does not support yet more than one occurence of CTParameters in the couplings values.")
+ 
+         if not CTparam:
+             if x==0:
+diff -ruN a/Interfaces/UFO/Model/propagators.py b/Interfaces/UFO/Model/propagators.py
+--- a/Interfaces/UFO/Model/propagators.py	2026-10-19 06:25:28.684067670 -0400
++++ b/Interfaces/UFO/Model/propagators.py	2025-10-22 23:46:16.000000000 -0400
+@@ -2,7 +2,7 @@
+ # Mathematica version: 8.0 for Mac OS X x86 (64-bit) (November 6, 2010)
+ # Date: Mon 1 Oct 2012 14:58:26
+ 
+-from object_library import all_propagators, Propagator
++from .object_library import all_propagators, Propagator
+ 
+ 
+ # define only once the denominator since this is always the same
+@@ -22,7 +22,7 @@
+ 
+ # massive vector in the unitary gauge, can't be use for massless particles
+ V1 = Propagator(name = "V1",
+-                numerator = "complex(0,1) * (-1 * Metric(1, 2) + Metric(1,'mu')* P('mu', id) * P(2, id) / Mass(id)**2)",
++                numerator = "complex(0,1) * (-1 * Metric(1, 2) + Metric(1,'mu')* P('mu', id) * P(2, id) / Mass(id)**2 ",
+                 denominator = denominator
+                )
+ 
+diff -ruN a/Interfaces/UFO/Model/write_param_card.py b/Interfaces/UFO/Model/write_param_card.py
+--- a/Interfaces/UFO/Model/write_param_card.py	2026-10-19 06:25:28.684107538 -0400
++++ b/Interfaces/UFO/Model/write_param_card.py	2025-10-22 23:55:08.000000000 -0400
+@@ -1,51 +1,53 @@
++__date__ = "22 October 2025"
++__author__ = 'olivier.mattelaer@uclouvain.be and isaacs21@msu.edu'
+ 
+-__date__ = "6 March 2020"
+-__author__ = 'olivier.mattelaer@uclouvain.be'
+-
++import functools
++from .function_library import *
+ 
+ class ParamCardWriter(object):
+-    
++
+     header = \
+     """######################################################################\n""" + \
+     """## PARAM_CARD AUTOMATICALY GENERATED BY THE UFO  #####################\n""" + \
+-    """######################################################################\n"""   
+-    
++    """######################################################################\n"""
++
+     def __init__(self, filename, list_of_parameters=None, generic=False):
+         """write a valid param_card.dat"""
+-        
++
+         if not list_of_parameters:
+-            from parameters import all_parameters
++            from .parameters import all_parameters
+             list_of_parameters = [param for param in all_parameters if \
+                                                        param.nature=='external']
+-        
++
+         self.generic_output = generic
+         if generic:
+             self.define_not_dep_param(list_of_parameters)
+ 
+-        
++
+         self.fsock = open(filename, 'w')
+         self.fsock.write(self.header)
+-        
++
+         self.write_card(list_of_parameters)
+-    
++        self.fsock.close()
++
+     def define_not_dep_param(self, list_of_parameters):
+-        """define self.dep_mass and self.dep_width in case that they are 
++        """define self.dep_mass and self.dep_width in case that they are
+         requested in the param_card.dat"""
+-        from particles import all_particles
+-        
++        from .particles import all_particles
++
+         self.dep_mass = [(part, part.mass) for part in all_particles \
+                             if part.pdg_code > 0 and \
+                                             part.mass not in list_of_parameters]
+         self.dep_width = [(part, part.width) for part in all_particles\
+                              if part.pdg_code > 0 and \
+-                                part.width not in list_of_parameters]        
+-    
++                                part.width not in list_of_parameters]
++
+     @staticmethod
+     def order_param(obj1, obj2):
+         """ order parameter of a given block """
+-        
++
+         maxlen = min([len(obj1.lhacode), len(obj2.lhacode)])
+-    
++
+         for i in range(maxlen):
+             if obj1.lhacode[i] < obj2.lhacode[i]:
+                 return -1
+@@ -60,13 +62,13 @@
+             return 0
+         else:
+             return -1
+-        
++
+     def write_card(self, all_ext_param):
+         """ """
+-        
++
+         # list all lhablock
+         all_lhablock = set([param.lhablock for param in all_ext_param])
+-        
++
+         # ordonate lhablock alphabeticaly
+         all_lhablock = list(all_lhablock)
+         all_lhablock.sort()
+@@ -75,25 +77,24 @@
+             if name in all_lhablock:
+                 all_lhablock.remove(name)
+                 all_lhablock.insert(0, name)
+-        
++
+         for lhablock in all_lhablock:
+             self.write_block(lhablock)
+             need_writing = [ param for param in all_ext_param if \
+                                                      param.lhablock == lhablock]
+-            from functools import cmp_to_key
+-            need_writing.sort(key=cmp_to_key(self.order_param))
++            need_writing.sort(key=functools.cmp_to_key(self.order_param))
+             [self.write_param(param, lhablock) for param in need_writing]
+-            
++
+             if self.generic_output:
+                 if lhablock in ['MASS', 'DECAY']:
+                     self.write_dep_param_block(lhablock)
+ 
+         if self.generic_output:
+             self.write_qnumber()
+-                               
++
+     def write_block(self, name):
+         """ write a comment for a block"""
+-        
++
+         self.fsock.writelines(
+         """\n###################################""" + \
+         """\n## INFORMATION FOR %s""" % name.upper() +\
+@@ -103,78 +104,103 @@
+             self.fsock.write("""Block %s \n""" % name)
+ 
+     def write_param(self, param, lhablock):
+-        
++
+         lhacode=' '.join(['%3s' % key for key in param.lhacode])
+         if lhablock != 'DECAY':
+-            text = """  %s %e # %s \n""" % (lhacode, complex(param.value).real, param.name ) 
++            text = """  %s %e # %s \n""" % (lhacode, complex(param.value).real, param.name )
+         else:
+             text = '''DECAY %s %e \n''' % (lhacode, complex(param.value).real)
+-        self.fsock.write(text) 
+-                    
++        self.fsock.write(text)
++
++
+ 
+ 
+-    
+     def write_dep_param_block(self, lhablock):
+         import cmath
+-        from parameters import all_parameters
++        from .parameters import all_parameters
++        from .particles import all_particles
+         for parameter in all_parameters:
+-            exec("%s = %s" % (parameter.name, parameter.value))
++            exec("%s = %s" % (parameter.name, parameter.value), globals())
+         text = "##  Not dependent paramater.\n"
+         text += "## Those values should be edited following analytical the \n"
+         text += "## analytical expression. Some generator could simply ignore \n"
+         text += "## those values and use the analytical expression\n"
+-        
++
+         if lhablock == 'MASS':
+             data = self.dep_mass
+             prefix = " "
+         else:
+             data = self.dep_width
+             prefix = "DECAY "
++
+         for part, param in data:
+             if isinstance(param.value, str):
+                 value = complex(eval(param.value)).real
+             else:
+                 value = param.value
+-            
+-            text += """%s %s %f # %s : %s \n""" %(prefix, part.pdg_code, 
++
++            text += """%s %s %f # %s : %s \n""" %(prefix, part.pdg_code,
+                         value, part.name, param.value)
+-        self.fsock.write(text)    
+-    
++        # If more than a particles has the same mass/width we need to write it here
++        # as well
++        if lhablock == 'MASS':
++            arg = 'mass'
++            done = [part for (part, param) in self.dep_mass]
++        else:
++            arg = 'width'
++            done = [part for (part, param) in self.dep_width]
++        for particle in all_particles:
++            if particle.pdg_code <0:
++                continue
++            is_define = True
++            if particle not in done:
++                if getattr(particle, arg).lhacode[0] != particle.pdg_code:
++                    is_define = False
++            if  not is_define:
++                value = float(particle.get(arg).value )
++                name =  particle.get(arg).name
++                text += """%s %s %f # %s : %s \n""" %(prefix, particle.pdg_code,
++                        value, particle.name, name)
++
++
++
++
++        self.fsock.write(text)
++
+     sm_pdg = [1,2,3,4,5,6,11,12,13,13,14,15,16,21,22,23,24,25]
+-    data="""Block QNUMBERS %(pdg)d  # %(name)s 
++    data="""Block QNUMBERS %(pdg)d  # %(name)s
+         1 %(charge)d  # 3 times electric charge
+         2 %(spin)d  # number of spin states (2S+1)
+         3 %(color)d  # colour rep (1: singlet, 3: triplet, 8: octet)
+         4 %(antipart)d  # Particle/Antiparticle distinction (0=own anti)\n"""
+-    
++
+     def write_qnumber(self):
+         """ write qnumber """
+-        from particles import all_particles
+-        
++        from .particles import all_particles
++        from . import particles
++        print(particles.__file__)
+         text="""#===========================================================\n"""
+         text += """# QUANTUM NUMBERS OF NEW STATE(S) (NON SM PDG CODE)\n"""
+         text += """#===========================================================\n\n"""
+-        
++
+         for part in all_particles:
+             if part.pdg_code in self.sm_pdg or part.pdg_code < 0:
+                 continue
+             text += self.data % {'pdg': part.pdg_code,
+                                  'name': part.name,
+                                  'charge': 3 * part.charge,
+-                                 'spin': 2 * part.spin + 1,
++                                 'spin': part.spin,
+                                  'color': part.color,
+                                  'antipart': part.name != part.antiname and 1 or 0}
+-        
++
+         self.fsock.write(text)
+-        
+-        
+-            
+-            
+-            
+-            
+-        
+-            
++
++
++
++
++
++
++
+ if '__main__' == __name__:
+     ParamCardWriter('./param_card.dat', generic=True)
+     print('write ./param_card.dat')
+-    
+diff -ruN a/Interfaces/UFO/PYCouplingOrders.m b/Interfaces/UFO/PYCouplingOrders.m
+--- a/Interfaces/UFO/PYCouplingOrders.m	2026-10-19 06:25:28.683957969 -0400
++++ b/Interfaces/UFO/PYCouplingOrders.m	2024-11-15 16:02:10.000000000 -0500
+@@ -107,17 +107,17 @@
+    outfile = OpenWrite["coupling_orders.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_orders, CouplingOrder\n"];
++   WriteString[outfile, "from .object_library import all_orders, CouplingOrder\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    WriteCouplingOrderObject[outfile, #]& /@ (CreateCouplingObjectEntry /@ PYConvolveCouplingOrdersLists[FR$InteractionOrderHierarchy,FR$InteractionOrderLimit,FR$InteractionOrderPerturbativeExpansion]);
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 coupling order", ToString[Length[list]] <> " couplings orders"] <> " written."];
+    TestQ[FileExistsQ, "coupling_orders.py", "   * coupling_orders.py written.", "   * coupling_orders.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+diff -ruN a/Interfaces/UFO/PYDecays.m b/Interfaces/UFO/PYDecays.m
+--- a/Interfaces/UFO/PYDecays.m	2026-10-19 06:25:28.687320084 -0400
++++ b/Interfaces/UFO/PYDecays.m	2024-11-15 16:02:10.000000000 -0500
+@@ -51,9 +51,9 @@
+     simplify = OptionValue[SimplifyDecays]
+     },
+ 
+-    decays = Timing[CalculateM2Decays[verts]]; 
++    decays = Timing[CalculateM2Decays[verts]];
+     Print["Squared matrix elent compute in ", decays[[1]], " seconds."]; decays=decays[[2]];
+-   
++
+     decays = Timing[ComputeDecays[decays, Simplify -> simplify, ProgressIndicator -> False]];
+     Print["Decay widths computed in ", decays[[1]], " seconds."]; decays=decays[[2]];
+ 
+@@ -63,8 +63,8 @@
+ 
+     Return[decays];
+ ];
+-    
+-    
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -87,7 +87,7 @@
+ 
+     Return[PYDicEntry[final, PYString[matrixelement]]]
+ ];
+-     
++
+ 
+ 
+ (* ::Section:: *)
+@@ -97,9 +97,9 @@
+ CreateDecayObjectEntry[incoming_, channels__] := Block[{
+    inpart = CreateObjectParticleName[PartNameMG[incoming]],
+    chans = CreatePYDecayChannel @@@ {channels},
+-   attributes, 
++   attributes,
+    first, last, bulk, allchannels,
+-   object 
++   object
+    },
+ 
+    object = "Decay_" <> CreateObjectParticleName[PartNameMG[incoming]];
+@@ -122,9 +122,9 @@
+ 
+ ];
+ 
+-   
+ 
+-   
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -138,7 +138,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -158,19 +158,20 @@
+    outfile = OpenWrite["decays.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_decays, Decay\n"];
+-   WriteString[outfile, "import particles as P\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_decays, Decay\n"];
++   WriteString[outfile, "from . import particles as P\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    verts = CreateDecayObjectEntry @@@ vertlist;
+    WriteDecayObject[outfile, #]& /@ verts;
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[vertlist] == 1, "1 decay", ToString[Length[vertlist]] <> " decays"] <> " written."];
+    TestQ[FileExistsQ, "decay.py", "   * decay.py written.", "   * decay.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+diff -ruN a/Interfaces/UFO/PYFormFactors.m b/Interfaces/UFO/PYFormFactors.m
+--- a/Interfaces/UFO/PYFormFactors.m	2026-10-19 06:25:28.687411320 -0400
++++ b/Interfaces/UFO/PYFormFactors.m	2026-08-04 16:31:47.000000000 -0400
+@@ -15,15 +15,53 @@
+ CountFormFactors[expi_, fff_] := If[expi === fff, Return[1], Return[Count[expi, fff, Infinity]]];
+ 
+ 
+-AddFormFactorsToLorentzObject[LorentzObject[name_, spins_, exp_]] := Block[{ffs},
+-   
++AddFormFactorsToLorentzObject[LorentzObject[name_, spins_, exp_], formfactors_] := Block[{ffs, sub, expsub},
++
+     (* Make a list which counts how many times a given form factor appear inside the expression,
+        then delete those that appear 0 times *)
+     ffs = {#, CountFormFactors[exp, #]}& /@ FR$FormFactors;
+     ffs = DeleteCases[ffs, {_, 0}];
+     ffs = First /@ ffs;
+ 
+-    Return[LorentzObject[name, spins, exp, ffs]];
++    If[Length[ffs] == 0, Return[LorentzObject[name, spins, exp, ffs]]];
++
++    (* UFO 2.0, arXiv:2304.09883 section 4.2 and the VVS1 example under Eq. (10):
++       a form factor is NOT a separate object referenced from the Lorentz object.
++       It is written inline in the structure string as a call to a Function of the
++       momenta, implementing  L -> F(p1,...,pn) L.  So substitute each form factor
++       symbol by its (momentum-relabelled) expression and return an empty form
++       factor list.  NB the previous version substituted only First[ffs], silently
++       dropping any further form factor on the same structure. *)
++    sub = Table[
++       Module[{m = Select[formfactors, First[#] === ff &], e},
++          If[m === {}, ff -> ff,
++             e = Last[First[m]];
++             (* The form factor value is a raw Python string spliced into the
++                structure.  It MUST be parenthesised: a compound expression such as
++                "F1p(-P(-1,3)**2) - 1" would otherwise be emitted as
++                   F1p(-P(-1,3)**2) - 1*Gamma(3,2,1)
++                which Python reads as F1p(...) - (1*Gamma(...)), not
++                   (F1p(-P(-1,3)**2) - 1)*Gamma(3,2,1). *)
++             ff -> If[StringQ[e], "(" <> e <> ")", e]]],
++       {ff, ffs}];
++
++    (* Collect FIRST, so that each form factor is emitted ONCE per structure.
++       A Lorentz structure that is a sum, e.g. the G2 gamma-N-Delta term
++          FF*P(2,3)*P(3,2)*Gamma5(2,1) - FF*P(-1,2)*P(-1,3)*Gamma5(2,1)*Metric(2,3)
++       is mathematically fine but Sherpa's UFO reader is not able to read it:
++       ufo_interface/lorentz_algebra.py accumulates form factors with
++          self.form_factor  *=  sympy.Function[name][args]        (python syntax)
++       once per occurrence, so the same factor seen twice becomes FF^2, a
++       sympy Pow, and lorentz_printer.set_form_factor then dies with
++          AttributeError: 'Pow' object has no attribute 'name'
++       (Sherpa multiplies the whole current by one FF call, so one occurrence
++       per structure is what its data model expects.)  Collect puts it back
++       outside the sum, FF*(a - b), which reads correctly there and everywhere
++       else.  Every term of such a structure carries the same form factor, so
++       nothing can be left behind. *)
++    expsub = Collect[exp, ffs] /. sub;
++
++    Return[LorentzObject[name, spins, expsub, {}]];
+ 
+ ];
+ 
+@@ -45,16 +83,16 @@
+ 
+    (* Pass to Python form *)
+     expf = PythonForm[expf];
+-  
++
+     Return[FormFactorObject[ToString[name], {{"name",  PYString[ToString[name]]},
+                                    {"type",  PYString[If[compl, "complex", "real"]]},
+                                    {"value", PYString[expf]}}]];
+ ];
+-    
+ 
+-   
+ 
+-   
++
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -67,7 +105,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -87,19 +125,20 @@
+    outfile = OpenWrite["form_factors.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_form_factors, FormFactor\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_form_factors, FormFactor\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    WriteFormFactorObject[outfile, #]& /@ (CreatePYFormFactorEntry /@ list);
+ 
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 form factor", ToString[Length[list]] <> " form factors"] <> " written."];
+    TestQ[FileExistsQ, "form_factors.py", "   * form_factors.py written.", "   * form_factors.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+diff -ruN a/Interfaces/UFO/PYIntMain.m b/Interfaces/UFO/PYIntMain.m
+--- a/Interfaces/UFO/PYIntMain.m	2026-10-19 06:25:28.683987499 -0400
++++ b/Interfaces/UFO/PYIntMain.m	2026-07-30 16:53:18.000000000 -0400
+@@ -536,6 +536,15 @@
+ 
+    (* We now separate into Lorentz, color and coupling structures , anmd create PY$LorentzObjects and PY$CouplObjects*)
+    Print["    - Splitting vertices into building blocks."];
++   (* BUGFIX: PYSplitVertices runs over parallel subkernels, where FR$FormFactors
++      is still the empty list the package initialises it to -- DeclareIndividualFormFactor
++      only AppendTo's it on the master during LoadModel.  FormFactorQ therefore returns
++      False on the subkernels, GrabLorentz fails to pull form factors onto the Lorentz
++      side, and they end up inside the coupling instead (where they are momentum
++      dependent and cannot be evaluated).  Push the list out before splitting. *)
++   If[FR$FormFactors =!= {},
++      DistributeDefinitions[FR$FormFactors, FormFactor$Particles, FormFactor$Value];
++     ];
+    vertices = PYSplitVertices[vertices];
+ (*Print["after split"];
+ Print[InputForm[vertices]];*)
+@@ -553,7 +562,7 @@
+ 
+    (* Add the form factors to the lorentz objects *)
+ 
+-   PY$LorentzObjects = AddFormFactorsToLorentzObject /@ PY$LorentzObjects;
++   PY$LorentzObjects = AddFormFactorsToLorentzObject[#, formfactors]& /@ PY$LorentzObjects;
+ 
+ (* * * * * * * * * * * * * * * * * * * * * * * *)
+ (* NLO module                                 *)
+diff -ruN a/Interfaces/UFO/PYIntParameters.m b/Interfaces/UFO/PYIntParameters.m
+--- a/Interfaces/UFO/PYIntParameters.m	2026-10-19 06:25:28.684247230 -0400
++++ b/Interfaces/UFO/PYIntParameters.m	2024-11-15 16:02:10.000000000 -0500
+@@ -37,7 +37,7 @@
+ (* For no InteractionOrder *)
+ 
+ MakeInteractionOrderMatrix[ios__]:= Table[{{ios}[[2k-1]],{ios}[[2k]]},{k,Length[{ios}]/2}];
+-    
++
+ 
+ ReorderEParamEntry[{lhablock_, lhanumber_, name_, ios__,  value_, type_, descrip_}] := {name, name /. ParamRules, type, value, descrip, ToString[name, TeXForm], lhablock, lhanumber, MakeInteractionOrderMatrix[ios]};
+ 
+@@ -104,11 +104,11 @@
+ ChangeEParameterConventions[eparamlist_, masslist_, widthlist_] := Block[{newlist = eparamlist, neparams = Length[eparamlist],
+     newmasslist = masslist[[2]], newwidthlist = widthlist[[2]],
+     goldsnghosts = List[#]& /@ Join[Select[Join @@ PartList[[All,2]], #[[3]] === U &][[All,9]],Select[Join @@ PartList[[All,2]], Last[#] =!= NoGS &][[All,9]]]},
+-  
+-   (* We bring newlist to the matrix form 
++
++   (* We bring newlist to the matrix form
+       {LHABlock, {LHANumber}, Name, Value, Type, Description}
+       or for parameters with interaction order defined,
+-      {LHABlock, {LHANumber}, Name, InteractionOrder, InteractionOrderValue, Value, Type, Description} 
++      {LHABlock, {LHANumber}, Name, InteractionOrder, InteractionOrderValue, Value, Type, Description}
+     *)
+ 
+     newlist = MapAt[Sequence @@ # &, #, 3]& /@ (Join @@ Table[Prepend[#, newlist[[kk, 1]]]& /@ newlist[[kk,2]], {kk, neparams}]);
+@@ -120,7 +120,7 @@
+ 
+     (* We now add the masses *)
+     (* We start by removing the mass entries for goldstones and ghosts *)
+-    newmasslist = Select[newmasslist,Not[MemberQ[goldsnghosts, #[[1]]]]&]; 
++    newmasslist = Select[newmasslist,Not[MemberQ[goldsnghosts, #[[1]]]]&];
+     (** ADDED BY BENJ: removing extra mass parameters when several particles have the same masses **)
+     newmasslist = Delete[newmasslist,List/@Flatten[Drop[Position[newmasslist[[All,2]],#],-1]&/@ DeleteCases[Tally[newmasslist[[All,2]]],{_,1}][[All,1]]]];
+     (** END BENJ **)
+@@ -137,7 +137,7 @@
+     newmasslist = newmasslist /. NoPDG -> Identity;
+ 
+     (* We now do the same for the width *)
+-    newwidthlist = Select[newwidthlist,Not[MemberQ[goldsnghosts, #[[1]]]]&]; 
++    newwidthlist = Select[newwidthlist,Not[MemberQ[goldsnghosts, #[[1]]]]&];
+ (*    newwidthlist = RemoveDuplicateMassesOrWidthsForUFO[newwidthlist]*)
+     newwidthlist = DeleteCases[Prepend[#, DECAY]& /@ newwidthlist, {__, Internal}];
+     (* Then we reorder it into the required form *)
+@@ -150,7 +150,7 @@
+ 
+     (* Prepend External *)
+     newlist = Prepend[#, External]& /@ newlist;
+-   
++
+ 
+     (* Return and exit *)
+     FRDebug["ChangeEParameterConventions", newlist];
+@@ -170,7 +170,7 @@
+ 
+ 
+ ChangeIParameterConventions[iparamlist_] := Block[{newlist = iparamlist, neparams = Length[iparamlist]},
+-  
++
+     (* We now reorder this matrix according to the new convention *)
+     (* We start with the parameters without interaction order *)
+ 
+@@ -198,24 +198,24 @@
+ 
+ 
+ PYCheckParameters[params_] := Block[{numbers, isnumber, makedialog = False, iscomplex, newparams = params, blocks, eparams},
+-  
++
+     (* Check if everything has a value *)
+      numbers = {#, NumericalValue[#]}& /@ newparams[[All, 3]];
+      isnumber =  {#1, NumericQ[#2]}& @@@ numbers;
+      If[Not[#[[2]]], makedialog = True; AppendTo[GenInt$LogFile, "   * Parameter " <> ToString[#[[1]]] <> " has no value. Default value 1 assigned."]]& /@ isnumber;
+-     If[makedialog, 
++     If[makedialog,
+         AppendTo[GenInt$Dialog, "- Some parameters do not have assigned a value. Assigning default value 1.\n"]
+         ];
+      makedialog = False;
+- 
++
+     (* Check if every eparam has an LHA block assigned *)
+     eparams = Cases[params, {External, __}];
+     blocks = Transpose[List[eparams[[All, 3]], eparams[[All, 7]]]];
+     If[MatchQ[#, {_, NoBlockName[_]}], makedialog = True; AppendTo[GenInt$LogFile, "   * External parameter " <> ToString[#[[1]]] <> " has no BlockName assigned. Default block FRBlock assigned."]]& /@ blocks;
+-    If[makedialog, 
++    If[makedialog,
+         AppendTo[GenInt$Dialog, "- Some external parameters do not have assigned a BlockName. Assigning default block FRBlock.\n"]
+         ];
+-     
++
+     (* Check if complex numbers are defined as complex *)
+      iscomplex = {#1, MatchQ[#2, _Complex]}& @@@ numbers;
+      Do[If[iscomplex[[kk, 2]],
+@@ -234,7 +234,7 @@
+      FRDebug["CheckParameters", newparams];
+      Return[newparams]
+ 
+-];  
++];
+ 
+ 
+ (* ::Subsection:: *)
+@@ -247,7 +247,7 @@
+     Return[mlist];
+ ];
+ 
+-    
++
+ 
+ 
+ (* ::Section:: *)
+@@ -285,7 +285,7 @@
+ 
+ 
+    (* Write results to the LogFile *)
+-   If[Length[GenInt$LogFile] == 0, 
++   If[Length[GenInt$LogFile] == 0,
+       AppendTo[GenInt$LogFile, "   * All parameters are ok."]
+       ];
+    AppendTo[GenInt$LogFile, ""];
+@@ -348,7 +348,7 @@
+ 
+ 
+ ParamToPYForm[params_] := Block[{eparams, iparams, newparams},
+-   
++
+    eparams = Cases[params, {External, __}];
+    iparams = Cases[params, {Internal, __}];
+ 
+@@ -362,7 +362,7 @@
+    Return[newparams]
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -375,7 +375,7 @@
+ 
+ 
+ CreateParameterObjectEntry[paramdef_] := Block[{dicout},
+-   
++
+    dicout = {{"name",         PYString[MakeString[paramdef[[3]]]]},
+              {"nature",       paramdef[[1]]} /. {External -> "'external'", Internal -> "'internal'"},
+              {"type",         If[paramdef[[4]], "'complex'", "'real'"]},
+@@ -392,7 +392,7 @@
+     Return[dicout]
+ 
+ ];
+-             
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -405,7 +405,7 @@
+ 
+ 
+ CreateCTParameterObjectEntry[paramdef_] := Block[{dicout},
+-   
++
+    dicout = {{"name",         PYString[MakeString[paramdef[[1]]]]},
+              {"type",         "'complex'"},
+              {"value",        paramdef[[2]]},
+@@ -416,7 +416,7 @@
+     Return[dicout]
+ 
+ ];
+-             
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -445,7 +445,7 @@
+      WriteString[file, "\n"];
+ ];
+ 
+-      
++
+ 
+ 
+ (* ::Section:: *)
+@@ -471,7 +471,7 @@
+                  {"lhacode",  "[1]"}}
+    },
+ 
+-   
++
+    (* Create parameter python dictionary *)
+    plist = ParamToPYForm[plist];
+    plist = CreateParameterObjectEntry /@ plist;
+@@ -480,8 +480,9 @@
+    DeleteFileIfExists["parameters.py"];
+    outfile = OpenWrite["parameters.py"];
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "\nfrom object_library import all_parameters, Parameter\n\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "\nfrom .object_library import all_parameters, Parameter\n\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
+ 
+    WritePYCommentLine[outfile, "This is a default parameter object representing 0."];
+    WritePYObject[outfile, "ZERO", "Parameter", zeroobject];
+@@ -497,12 +498,8 @@
+    WriteParameterObject[outfile, #]& /@ plist;
+    Close[outfile];
+    TestQ[FileExistsQ, "parameters.py", "   * parameters.py written.", "   * parameters.py not written"];
+-   
++
+    (* Write the Log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+ ];
+-
+-   
+-
+-   
+diff -ruN a/Interfaces/UFO/PYIntParticles.m b/Interfaces/UFO/PYIntParticles.m
+--- a/Interfaces/UFO/PYIntParticles.m	2026-10-19 06:25:28.684218581 -0400
++++ b/Interfaces/UFO/PYIntParticles.m	2024-11-15 16:02:10.000000000 -0500
+@@ -100,11 +100,11 @@
+ 
+ 
+ GenIntRemoveParticles[partlist_] := Block[{temppartlist = partlist, removed, newpartlist},
+-   
++
+    (* Remove particles that are not in GenInt$Classes nor GenInt$Spins*)
+ 
+    newpartlist = Select[temppartlist, MemberQ[Join[GenInt$Classes, GenInt$Spins], #[[3]]]&];
+-   
++
+    removed = Complement[temppartlist, newpartlist];
+    If[Length[removed] =!= 0,
+       AppendTo[GenInt$LogFile, "   * Particle " <> #1 <> " removed. Not in GenInt$Classes."]& @@@ removed
+@@ -115,7 +115,7 @@
+ 
+    (* Remove particles that are not in GenInt$Colors *)
+    newpartlist = Select[temppartlist, MemberQ[GenInt$Colors, #[[7]]]&];
+-   
++
+    removed = Complement[temppartlist, newpartlist];
+    If[Length[removed] =!= 0,
+       AppendTo[GenInt$LogFile, "   * Particle " <> #1 <> " removed. Not in GenInt$Colors."]& @@@ removed
+@@ -127,7 +127,7 @@
+ (*   (* Remove GoldStones (if relevant) *)
+    If[Not[GenInt$Goldstones],
+       newpartlist = Cases[temppartlist, {___, NoGS}];
+-   
++
+       removed = Complement[temppartlist, newpartlist];
+       If[Length[removed] =!= 0,
+          AppendTo[GenInt$LogFile, "   * Particle " <> #1 <> " removed. Goldstone boson."]& @@@ removed
+@@ -195,18 +195,18 @@
+ 
+ 
+ GenIntIndividualParticleTests[partlist_]:= Block[{},
+-   
++
+    (* Test ParticleName *)
+    TestQ[IsGenIntParticleName, #, "   >>> Some particle names are not strings!"]& /@ partlist[[All, 1]];
+ 
+    (* Test AntiParticleName *)
+    TestQ[IsGenIntParticleName, #, "   >>> Some antiparticle names are not strings!"]& /@ partlist[[All, 2]];
+ 
+-   (* Test PDG *)    
++   (* Test PDG *)
+    TestQ[IsGenIntPDG, #, "   >>> Some antiparticle names are not strings!"]& /@ partlist[[All, 9]];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -279,7 +279,7 @@
+    plist = AssignPDGCodes[plist];
+ 
+    (* Write results to the LogFile *)
+-   If[Length[GenInt$LogFile] == 0, 
++   If[Length[GenInt$LogFile] == 0,
+       AppendTo[GenInt$LogFile, "   * All particles are ok."]
+       ];
+    AppendTo[GenInt$LogFile, ""];
+@@ -292,7 +292,7 @@
+ 
+    (* Write to Logfile *)
+    WriteToLogFile[GenInt$LogFileName];
+-   
++
+ 
+    (* Return  and exit *)
+    Return[plist];
+@@ -324,14 +324,14 @@
+ 
+    (* Read out the mass and width symbols which have a NoValue[1] *)
+    zeromasses = #[[2]]& /@ Cases[zeromasses, {a1_,a2_?(Not[MemberQ[MyAspergeMasses,#]]&),NoValue[1]}];
+- 
++
+    (* Make a replacement list out of it *)
+    zeromasses = Rule[#,ZERO]& /@ zeromasses;
+ 
+    (* and apply it to the particle list *)
+    Return[particles /. zeromasses];
+ 
+-];  
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -348,13 +348,13 @@
+ 
+ 
+ AssignPDGCodes[partlist_] := Block[{nopdgs},
+-    
++
+    (* Select particles without pdg code *)
+    nopdgs = Cases[partlist, {___, NoPDG[_], ___}];
+-   
++
+    (* If there are particles without pdg code, then add a sentence to the GenInt Dialog and to the logfile *)
+    AppendTo[GenInt$LogFile, ""];
+-   If[nopdgs =!= {}, 
++   If[nopdgs =!= {},
+       AppendTo[GenInt$DialogString, "- Some particles do not have assigned a PDG. Assigning automatic PDG codes.\n"];
+       AppendTo[GenInt$LogFile, "# Automatically assigned PDG numbers"];
+       AppendTo[GenInt$LogFile, "   * Assigned PDG number " <> ToString[#[[9, 1]]] <> " to particle " <> ToString[#[[1]]]]& /@ nopdgs
+@@ -380,12 +380,12 @@
+ 
+ 
+ CheckPDGCodes[partlist_] := Block[{pdgs = partlist[[All, 9]], miss},
+-    
++
+    AppendTo[GenInt$LogFile, ""];
+    AppendTo[GenInt$LogFile, "# Compulsory PDG codes:"];
+ 
+    Do[miss = Complement[Rest[GenInt$CompulsoryPDG[[kk]]], pdgs];
+-      If[Length[miss] == 0, 
++      If[Length[miss] == 0,
+          AppendTo[GenInt$LogFile, "   * Class " <> ToString[GenInt$CompulsoryPDG[[kk,1]]] <> " complete."],
+          (*else*)
+          AppendTo[GenInt$LogFile, "   * Class " <> ToString[GenInt$CompulsoryPDG[[kk,1]]] <> " incomplete. " <> PYListString[miss] <> " missing."]
+@@ -416,17 +416,17 @@
+ 
+     (* Create the list, and rename "Q" to "charge" *)
+     Qnums = (({ToString[#], ToString[#[PartSymbol[partdef]], InputForm]}&) /@ mr$QNums)/. "Q"->"charge";
+-    (* Put "charge" in first place *) 
++    (* Put "charge" in first place *)
+     Qnums = Prepend[DeleteCases[Qnums, {"charge", _}], Cases[Qnums, {"charge", _}][[1]]];
+-    
++
+     (* Return and exit *)
+     Return[Qnums];
+ 
+ ];
+ 
+-    
+-   
+-   
++
++
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -441,7 +441,7 @@
+ 
+ 
+ CreateParticleObjectEntry[partdef_] := Block[{dicout},
+-   
++
+    dicout = {{"pdg_code",     ToString[partdef[[9]]]},
+              {"name",         PYString[partdef[[1]]]},
+              {"antiname",     PYString[partdef[[2]]]},
+@@ -466,7 +466,7 @@
+     Return[dicout]
+ 
+ ];
+-             
++
+ 
+ 
+ (* ::Section:: *)
+@@ -502,7 +502,7 @@
+ 
+      WritePYObject[file, classname, "Particle", list];
+      WriteString[file, "\n"];
+-     
++
+      (* If we have an antiparticle, than we also need to declare the antiparticle *)
+      If[classname =!= anticlassname,
+         WriteString[file, anticlassname, " = ", classname, ".anti()\n"];
+@@ -510,7 +510,7 @@
+        ];
+ ];
+ 
+-      
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -532,20 +532,17 @@
+ 
+    WritePYFRHeader[outfile];
+    WriteString[outfile, "from __future__ import division\n"];
+-   WriteString[outfile, "from object_library import all_particles, Particle\n"];
+-   WriteString[outfile, "import parameters as Param\n\n"];
+-   WriteString[outfile, "import propagators as Prop\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_particles, Particle\n"];
++   WriteString[outfile, "from . import parameters as Param\n\n"];
++   WriteString[outfile, "from . import propagators as Prop\n\n"];
+ 
+    WriteParticleObject[outfile, #]& /@ plist;
+ 
+    Close[outfile];
+    TestQ[FileExistsQ, "particles.py", "   * particles.py written.", "   * particles.py not written"];
+-   
++
+    (* Write the Log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+ ];
+-
+-   
+-
+-   
+diff -ruN a/Interfaces/UFO/PYIntVertices.m b/Interfaces/UFO/PYIntVertices.m
+--- a/Interfaces/UFO/PYIntVertices.m	2026-10-19 06:25:28.684144105 -0400
++++ b/Interfaces/UFO/PYIntVertices.m	2024-11-15 16:02:10.000000000 -0500
+@@ -48,15 +48,15 @@
+     colorstruc, lorentzstruc, couplstruc,
+     lorobjrules,couplobjrules, numberrpls, reversenumberrpls,
+     PYSVPower, PYSVPi, PYSVE, PYSVSqrt, PYSVLog,
+-    PYSVSin, PYSVCos, PYSVTan, PYSVCot, PYSVCsc, PYSVSec, 
++    PYSVSin, PYSVCos, PYSVTan, PYSVCot, PYSVCsc, PYSVSec,
+     PYSVArcSin, PYSVArcCos, PYSVArcTan, PYSVArcCot, PYSVArcSec, PYSVArcCsc,
+-    PYSVSinh, PYSVCosh, PYSVTanh, PYSVCoth, PYSVCsch, PYSVSech, 
++    PYSVSinh, PYSVCosh, PYSVTanh, PYSVCoth, PYSVCsch, PYSVSech,
+     PYSVArcSinh, PYSVArcCosh, PYSVArcTanh, PYSVArcCoth, PYSVArcSech, PYSVArcCsch},
+ 
+     (* We have to rename certain numbers, which should not be trated like numbers *)
+     numberrpls = {Power[x_, r_Rational] :> PYSVPower[x,r],
+-                  Pi -> PYSVPi, 
+-                  E  -> PYSVE,  
++                  Pi -> PYSVPi,
++                  E  -> PYSVE,
+                   Sqrt:>PYSVSqrt,
+                   Log :> PYSVLog,
+                   Sin :> PYSVSin,
+@@ -102,7 +102,7 @@
+        split1 = Join @@ WaitAll[split1];
+       ];
+ 
+-    lorentzstruc = Map[Take[#,{1,1}]&, split1, {2}];  
++    lorentzstruc = Map[Take[#,{1,1}]&, split1, {2}];
+ 
+     If[Global`FR$Parallelize === False,
+        split2 = FullSplitC[Map[Take[#,{2,2}]&, split1, {2}]],
+@@ -116,9 +116,9 @@
+        split2 = Join @@ WaitAll[split2];
+       ];
+ 
+-    colorstruc = Map[Take[#,{1,1}]&, split2, {2}];    
+-    couplstruc = Map[Take[#,{2,2}]&, split2, {2}] //. reversenumberrpls; 
+-   
++    colorstruc = Map[Take[#,{1,1}]&, split2, {2}];
++    couplstruc = Map[Take[#,{2,2}]&, split2, {2}] //. reversenumberrpls;
++
+ 
+ (*    colorstruc = ColorList[verts];
+     lorentzstruc = StructureList[verts];
+@@ -138,7 +138,7 @@
+    verts = StrictInner[Prepend, verts, particles, List];
+ 
+    (* Set the progress bar *)
+-   If[$VersionNumber >= 6, 
++   If[$VersionNumber >= 6,
+       Print["    - Optimizing: ", Dynamic[PY$SplitVertexCounter], "/", Length[verts], " ."],
+       (* else *)
+       Print["    - Optimizing."]];
+@@ -205,7 +205,7 @@
+ 
+ 
+ PYTensDotOpen[xx__, yy_][Index[name_ ,s1__], Index[name_, s2__]] := Block[{newindex = Unique["int$$"]},
+- 
++
+       PYTensDotOpen[xx][Index[name, s1], Index[name, newindex]] * PYMergeIndices[yy, Index[name, newindex], Index[name, s2]]
+ ];
+ 
+@@ -221,7 +221,7 @@
+ 
+ 
+ PYSPOpen[p1_, p2_] := Block[{ newindex = Unique["mu$$"] },
+-   
++
+        L$FV[p1, Index[Lorentz, newindex]] * L$FV[p2, Index[Lorentz, newindex]]
+ 
+ ];
+@@ -236,7 +236,7 @@
+ 
+ 
+ PYffOpen[a1_, a2_, a3_, a4_] := Block[{ newindex = Unique["a$$"] },
+-   
++
+        C$f[a1, a2, Index[Gluon, newindex]] * C$f[Index[Gluon, newindex], a3, a4]
+ 
+ ];
+@@ -277,18 +277,18 @@
+       If[FreeQ[workexpr, Index[_, Except[Ext[_]], ___]],
+          Return[workexpr]
+         ];
+-  
++
+       (* else, start *)
+       workexpr = Expand[workexpr];
+ 
+       (* if expr is a sum, then treat each term separately *)
+-      If[Head[workexpr] === Plus, 
++      If[Head[workexpr] === Plus,
+          Return[OptimizeIndexName /@ workexpr]
+         ];
+ 
+       (* otherwise, read out the internal indices *)
+       workexpr /. {Index[name_, Except[Ext[__], val_], opt___] :> (AppendTo[internalindices, Index[name, val, opt]] ; Index[name, val, opt])};
+- 
++
+       (* Remove double entries *)
+       internalindices = Union[internalindices];
+ 
+@@ -305,17 +305,17 @@
+ 
+       (* Finally apply the replacements *)
+       workexpr = workexpr //. internalindices //. FR$OptInt -> Int;
+- 
++
+       (* Return and exit *)
+       Return[workexpr];
+ 
+ ];
+ 
+-      
+ 
+-      
+ 
+-     
++
++
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -350,14 +350,14 @@
+     svertex = svertex /. {L$SP -> PYSPOpen , L$SlashedP -> PYSlashedPOpen, C$ff -> PYffOpen};
+ 
+     (* last but not least, another renaming of internal indices *)
+-    svertex = {OptimizeIndexName[#1], MapAt[OptimizeIndexName, #2, 2], Map[OptimizeIndexName, #3]}& @@@ svertex;  
++    svertex = {OptimizeIndexName[#1], MapAt[OptimizeIndexName, #2, 2], Map[OptimizeIndexName, #3]}& @@@ svertex;
+ 
+     (* Return and exit *)
+     Return[Prepend[svertex ,parts]];
+ 
+-];  
++];
++
+ 
+-    
+ 
+ 
+ (* ::Subsection:: *)
+@@ -374,8 +374,8 @@
+     struclist = {structures}
+ 
+    },
+-  
+-   
++
++
+     (* Proceed term by term via helperfunction *)
+     struclist = OptimizeInteractionOrdersInStructure @@@ struclist;
+ 
+@@ -386,8 +386,8 @@
+     Return[struclist];
+ 
+ ];
+-    
+-   
++
++
+ 
+ 
+ OptimizeInteractionOrdersInStructure[color_, lorentz_, coupling_] := Block[{
+@@ -402,8 +402,8 @@
+       ];
+ 
+     (* Get the interaction order for each term in the sum, and collect accordingly *)
+-    coupl = GatherByFirstElement[{GetIntOrder[#], #}& /@ (List @@ coupl)]; 
+-    
++    coupl = GatherByFirstElement[{GetIntOrder[#], #}& /@ (List @@ coupl)];
++
+     (* Recombine *)
+     coupl = CouplingObject /@ (Plus @@@ (Map[Last, #]& /@ coupl));
+ 
+@@ -412,7 +412,7 @@
+ 
+ ];
+ 
+-    
++
+ 
+ 
+ 
+@@ -470,7 +470,7 @@
+ 
+       (* Construct the flows *)
+       fermions = Join @@ Table[CanonicalOrder[fermions[[i+1]], fermions[[i]]], {i, 1, Length[fermions]-1, 2}];
+-  
++
+       (* recombine *)
+       parts = Join[fermions, nonfermions];
+ 
+@@ -500,7 +500,7 @@
+       structures = chainorder;
+ 
+       If[Length[chainorder] > 1,
+-         Print[Style["Warning: Multi-Fermion operators are not yet fully supported!", Red]]; 
++         Print[Style["Warning: Multi-Fermion operators are not yet fully supported!", Red]];
+         ];
+ 
+       chainorder = List @@ (chainorder /. _[___,Index[Spin, i_], Index[Spin,j_]] :> hold[i,j] //. hold[i_,j_]hold[j_,k_]:>hold[i,k]);
+@@ -524,9 +524,9 @@
+ TurnFermionicIndexDeltas[_[psi1_,psi2_],struc_]:= Block[{},
+ 
+     (* We check if psi1 is an antifield, and if struc is a delta function. If so, reverse the fermions. This does not change anything for the fermion flow*)
+-    If[Not[MatchQ[struc, IndexDelta[_,_]]], 
++    If[Not[MatchQ[struc, IndexDelta[_,_]]],
+        Return[{psi1,psi2}]];
+-  
++
+     If[AntiFieldQ[psi1[[1]]],
+        Return[{psi2,psi1}],
+        Return[{psi1,psi2}]
+@@ -535,23 +535,23 @@
+ 
+ CheckFermionicIndexDeltas[_[psi1_,psi2_], struc_] := Block[{newindexdelta,rule},
+ 
+-    (* We check if the order of the indices of the IndexDelta is the same as for the order of the fermions. 
+-       This is pure cosmetics, as the index delta does not feel the flow 
++    (* We check if the order of the indices of the IndexDelta is the same as for the order of the fermions.
++       This is pure cosmetics, as the index delta does not feel the flow
+        The output is a replacement rule list that contains the reversal, if any *)
+ 
+-        If[Not[MatchQ[struc, IndexDelta[_,_]]], 
++        If[Not[MatchQ[struc, IndexDelta[_,_]]],
+            Return[{}]];
+-    
++
+         newindexdelta = IndexDelta[Index[Spin, Ext[psi2[[2]]]], Index[Spin, Ext[psi1[[2]]]]];
+-        rule = If[newindexdelta =!= struc, 
++        rule = If[newindexdelta =!= struc,
+                   {struc -> newindexdelta},
+                   {}
+                   ];
+ 
+         Return[rule];
+ ];
+-        
+-        
++
++
+ 
+ 
+ 
+@@ -590,8 +590,8 @@
+      pyvertex
+     },
+ 
+-   (* Remove the CC statements, and the bar for Majoranas, 
+-      then introduce the particle names, and finally 
++   (* Remove the CC statements, and the bar for Majoranas,
++      then introduce the particle names, and finally
+       check if we need new Particle object names.
+     *)
+ 
+@@ -602,7 +602,7 @@
+     (* Now, create the color structure strings *)
+     coupl = {PythonForm[#1], #2, #3}& @@@ coupl;
+     colors = Union[First /@ coupl];
+-    
++
+     (* We now build replacement rules to identify back the Lorentz and color structures,
+        and how they are convolved.
+      *)
+@@ -612,8 +612,8 @@
+     (* And we then apply these reverse replacements to coupl *)
+     coupl = coupl /. colorreverse /. lorentzreverse;
+ 
+-    (* Finally, since a list in Python starts with 0, and not one, we 
+-       have to rescale everything by one unit 
++    (* Finally, since a list in Python starts with 0, and not one, we
++       have to rescale everything by one unit
+      *)
+      coupl = {#1-1, #2-1, #3}& @@@ coupl;
+ 
+@@ -632,10 +632,10 @@
+ 
+      (* Return and exit *)
+      Return[pyvertex];
+-                 
++
+ ];
+ 
+-    
++
+ 
+ 
+ (* ::Section::Closed:: *)
+@@ -655,7 +655,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -679,10 +679,11 @@
+    outfile = OpenWrite["vertices.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_vertices, Vertex\n"];
+-   WriteString[outfile, "import particles as P\n"];
+-   WriteString[outfile, "import couplings as C\n"];
+-   WriteString[outfile, "import lorentz as L\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_vertices, Vertex\n"];
++   WriteString[outfile, "from . import particles as P\n"];
++   WriteString[outfile, "from . import couplings as C\n"];
++   WriteString[outfile, "from . import lorentz as L\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    (* CD, 31.03.2015: With SH and MG5 we decided to go back to one coupling per vertex, not list thereof if they have different InteractionOrders *)
+@@ -694,7 +695,7 @@
+ 
+       maxiter=Max[Length/@vertsparts];
+       If[maxiter<2,Return[vo]];
+-  
++
+       vertsparts=Table[If[Length[#]<i,{},#[[i]]]&/@vertsparts,{i,maxiter}];
+       vertsparts=DeleteCases[#,{}]&/@vertsparts;
+       vertsparts=vertsparts//.VertTermObj->List;
+@@ -707,16 +708,16 @@
+    (* CD End*)
+ 
+    WriteVertexObject[outfile, #1]& /@ MapIndexed[CreateVertexObjectEntry, vertlist];
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[vertlist] == 1, "1 vertex", ToString[Length[vertlist]] <> " vertices"] <> " written."];
+    TestQ[FileExistsQ, "vertices.py", "   * vertices.py written.", "   * vertices.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -754,7 +755,7 @@
+ 
+ 
+ GetIntOrder[expr_Times] := GetIntOrder /@ expr;
+-GetIntOrder[expr_Power] := (MapAt[GetIntOrder, expr, 1]/.{Sqrt[gioa_^gion_]->gioa^(gion/2),(gioa_^giob_)^gioc_->gioa^(giob*gioc)});
++GetIntOrder[expr_Power] := MapAt[GetIntOrder, expr, 1];
+ 
+ 
+ (* ::Text:: *)
+@@ -772,11 +773,8 @@
+      Return[ios[[1]]];
+ 
+ ];
+-    
+ 
+ 
+-GetIntOrder[Eps[args__]]:=1;
+-
+ 
+ (* ::Text:: *)
+ (*For functions, use the interaction order is 1;*)
+@@ -860,7 +858,7 @@
+ 
+ ];
+ 
+-       
++
+ 
+ 
+ 
+@@ -908,7 +906,7 @@
+ 
+ ];
+ 
+-    
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -919,7 +917,7 @@
+ (*CreateLorentzObjectEntry[ LorentzObject] takes a definition for a single Lorentz object and transforms into the format required by for the Python vertex objects.*)
+ 
+ 
+-CreateLorentzObjectEntry[LorentzObject[name_, spins_, expr_, formfs_]] := Block[{outlist, 
++CreateLorentzObjectEntry[LorentzObject[name_, spins_, expr_, formfs_]] := Block[{outlist,
+    exp = expr},
+ 
+    (* We have to open the tensor products *)
+@@ -949,7 +947,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section::Closed:: *)
+@@ -973,25 +971,26 @@
+    outfile = OpenWrite["lorentz.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_lorentz, Lorentz\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_lorentz, Lorentz\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n"];
+    WriteString[outfile, "try:\n"];
+-   WriteString[outfile, "   import form_factors as ForFac \n"];
++   WriteString[outfile, "   from . import form_factors as ForFac \n"];
+    WriteString[outfile, "except ImportError:\n"];
+    WriteString[outfile, "   pass\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    WriteLorentzObject[outfile, #]& /@ (CreateLorentzObjectEntry /@ list);
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 lorentz structure", ToString[Length[list]] <> " lorentz structures"] <> " written."];
+    TestQ[FileExistsQ, "lorentz.py", "   * lorentz.py written.", "   * lorentz.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -1009,8 +1008,8 @@
+ 
+ 
+ CreateCouplingObjectEntry[CouplingObject[name_, expr_], laurentseries_:False] := Block[{
+-    outlist, 
+-    order, 
++    outlist,
++    order,
+     exp = expr //. ParamRules
+     },
+ 
+@@ -1042,8 +1041,8 @@
+             CreatePYLaurentSeriesDic[exp],
+             PYString[PythonForm[exp]]
+            ];
+-      
+-   
++
++
+ 
+    (* and finally we introduce the Python notation *)
+    order = {PYString[ToString[#1]], ToString[#2]}& @@@ order;
+@@ -1071,9 +1070,9 @@
+     lisi = list,
+     eppower = list[[1,1]]
+     },
+-    
++
+     (* Pull out the exponent of epsilon *)
+-    eppower = Which[eppower === 1, 0, 
++    eppower = Which[eppower === 1, 0,
+                     eppower === FR$Eps, 1,
+                     MatchQ[eppower, Power[FR$Eps, _]], eppower[[2]],
+                     True, Message[NLO::Failed]
+@@ -1114,7 +1113,7 @@
+    laurser = laurser /.RenormLog[1]->0 //. RenormLog[x_] :> Log[x(*/FR$MU*)];
+    laurser[[All,2]]=GatherIf/@laurser[[All,2]]/.If[a_==0,b_,c_]->If[a,c,b]; (*Special Madgraph case*)
+    laurser=laurser/.Log->RenormLog;
+-   
++
+    (* Convert everything to strong *)
+    laurser = {ToString[#1], PYString[PythonForm[#2]]}& @@@ laurser;
+    (* Create the dictionary *)
+@@ -1122,9 +1121,9 @@
+ 
+    Return[laurser];
+ ];
+-   
+ 
+-   
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -1143,7 +1142,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -1167,21 +1166,22 @@
+    outfile = OpenWrite["couplings.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_couplings, Coupling\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_couplings, Coupling\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    WriteCouplingObject[outfile, #]& /@ (CreateCouplingObjectEntry /@ list);
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 coupling", ToString[Length[list]] <> " couplings"] <> " written."];
+    TestQ[FileExistsQ, "couplings.py", "   * couplings.py written.", "   * couplings.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -1231,11 +1231,11 @@
+     },
+ 
+     verts = VertObjPart @@@ verts;
+- 
++
+     verts = verts //. {vv1___, VertObjPart[col1_, lor1_, coup1_], vv2___, VertObjPart[col2_, lor1_, coup1_], vv3___} :> {vv1, VertObjPart[col1+col2, lor1, coup1], vv2, vv3};
+ 
+     verts = List @@@ verts;
+-    
++
+     Return[Prepend[verts, particles]];
+ 
+ ];
+@@ -1288,13 +1288,13 @@
+     Return[newvertices];
+ 
+ ];
+-    
+-    
+ 
+-    
+-   
+ 
+-    
++
++
++
++
++
+ 
+ 
+ 
+@@ -1352,13 +1352,13 @@
+ RenameAntiColour[colorstruc_, particles_List] := Block[{
+     colstruc = Expand[colorstruc]},
+ 
+-   (* If no Eps, and no K6, nothing to be done *) 
+-   If[FreeQ[colstruc, C$Eps|C$K6], 
++   (* If no Eps, and no K6, nothing to be done *)
++   If[FreeQ[colstruc, C$Eps|C$K6],
+       Return[colstruc];
+      ];
+ 
+    (* If sum, start over *)
+-   If[Head[colstruc] === Plus, 
++   If[Head[colstruc] === Plus,
+       Return[RenameAntiColour[#, particles]& /@ colstruc];
+      ];
+ 
+diff -ruN a/Interfaces/UFO/PYNLO.m b/Interfaces/UFO/PYNLO.m
+--- a/Interfaces/UFO/PYNLO.m	2026-10-19 06:25:28.687380697 -0400
++++ b/Interfaces/UFO/PYNLO.m	2024-11-15 16:02:10.000000000 -0500
+@@ -45,7 +45,7 @@
+    Return[tempexpi];
+ 
+ ];
+-   
++
+ 
+ 
+ CollectCouplingsByTag[CouplingObject[name_, coupl_]] := Block[{
+@@ -61,7 +61,7 @@
+     UVCoupl = Cases[coupli, {PYR2UVTag["UV"], _}][[1,2]];
+ 
+     Return[{CouplingObject[name, LOCoupl], R2CouplingObject[name, R2Coupl], UVCouplingObject[name, UVCoupl]}];
+-]; 
++];
+ 
+ 
+ CollectCouplingsByTag[list_List] := CollectCouplingsByTag /@ list;
+@@ -82,13 +82,13 @@
+       ];
+ ];
+ 
+-    
+ 
+ 
+-CleanZeroPYIndividualVertices[{verts__, last_}] := Block[{ 
++
++CleanZeroPYIndividualVertices[{verts__, last_}] := Block[{
+     cc = DeleteCases[last, 0]
+     },
+-    
++
+     If[cc === {},
+        Return[0],
+        Return[{verts, cc}]
+@@ -102,13 +102,13 @@
+      },
+ 
+     (* First we read out the couplings *)
+-    (* If the tag is "R2", we need the second line of the coupling matrix 
++    (* If the tag is "R2", we need the second line of the coupling matrix
+        If the tag is "UV", the 3rd, if "1" the first *)
+     coupls = Which[tag === "1",  couplings[[1]],
+                    tag === "R2", couplings[[2]],
+                    tag === "UV", couplings[[3]]
+                   ];
+- 
++
+     (* Take those that are zero *)
+     zerocouplrules = Cases[coupls, _[_,0]];
+     coupls = Complement[coupls, zerocouplrules];
+@@ -120,9 +120,9 @@
+     Return[{cleanvertices, coupls}];
+ ];
+ 
+-    
+-             
+-     
++
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -146,8 +146,8 @@
+ 
+    loopy = loopy //. repllist;
+ 
+-   (* We do not need antiparticle distinctions. 
+-      Indeed, if a certain particle can not appear in a loop, 
++   (* We do not need antiparticle distinctions.
++      Indeed, if a certain particle can not appear in a loop,
+       its antiparticle cannot either
+     *)
+    loopy = If[AntiFieldQ[#] === True, anti[#], #]& /@ loopy;
+@@ -158,7 +158,7 @@
+ 
+    Return[loopy];
+ ];
+-   
++
+ 
+ 
+ (* ::Subsection:: *)
+@@ -169,7 +169,7 @@
+    first = ListOfCoupls[[1,1]],
+    summands = ListOfCoupls[[All,2]]
+    },
+- 
++
+    summands = Plus @@ summands;
+    Return[{first, summands}];
+ ];
+@@ -191,7 +191,7 @@
+     Return[fulllist];
+ ];
+ 
+-    
++
+ 
+ 
+ CreateNewNamesForR2UVCouplingObject[listcoupl_List, r2uvtag_String] := Block[{
+@@ -201,15 +201,15 @@
+    allobjs = GatherByFirstElement[allobjs];
+ 
+ 
+-  
++
+    allobjs = Flatten[Table[InventNewNameForR2UVCouplingObject[allobjs[[iii]], r2uvtag, iii], {iii, Length[allobjs]}]];
+ 
+    Return[allobjs];
+ ];
+-   
+-   
+ 
+-    
++
++
++
+ 
+ 
+ GatherByLoopParticles[couplingobject_] := Block[{
+@@ -230,12 +230,12 @@
+    couplingconst = GatherByFirstElement[couplingconst];
+    couplingconst = SumByLoopParticles /@ couplingconst;
+ 
+-   couplingconst = head[name, ##]& @@@ couplingconst;   
++   couplingconst = head[name, ##]& @@@ couplingconst;
+ 
+    Return[couplingconst];
+ ];
+ 
+-   
++
+ 
+ 
+ RenameNLOCoupling[elem_, repl_] := Block[{
+@@ -247,7 +247,7 @@
+    },
+ 
+    newname = Cases[MyRule @@@ repl, MyRule[{oldname, lops},_]][[1,2]];
+-  
++
+    Return[head[oldname, lops, newname, analytic]];
+ 
+ ];
+@@ -263,7 +263,7 @@
+ 
+     restlist = Flatten[AddLoopParticlesToVertexTerm[#, coupllist]& /@ restlist] /. dumbo -> List;
+     restlist= Join @@ restlist;
+-  
++
+     (* We need to collect couplings for which color, Lorentz and loop particles are identical,
+        because they only differ by an interaction order *)
+     restlist = GatherByFirstElement[{#[[1;;3]], #[[4]]}& /@ restlist];
+@@ -279,8 +279,8 @@
+    },
+    allcoups = Reverse[Most[Rest[#]]]& /@ Flatten[Table[Select[coupllist, Not[FreeQ[#, elem]]&], {elem, couplingstruclist}]];
+    allcoups = dumbo[colorstruc, lorentzstruc, Sort[Last /@ #], #[[1,1]]]& /@ GatherByFirstElement[allcoups];
+-   allcoups = dumbo @@ allcoups; 
+-   
++   allcoups = dumbo @@ allcoups;
++
+ 
+    Return[allcoups];
+ 
+@@ -293,7 +293,7 @@
+ 
+ ProcessNLOVertices[R2verts_List, R2coupls_List, UVverts_List, UVcoupls_List] := Block[{
+    R2V = R2verts,
+-   R2C = R2coupls, 
++   R2C = R2coupls,
+    UVV = UVverts,
+    UVC = UVcoupls,
+    optimizedrenamingrulesR2, optimizedrenamingrulesUV
+@@ -313,10 +313,10 @@
+ 
+    (* Build the replacement list *)
+    PYNLO$R2CouplingRename = CreateNewNamesForR2UVCouplingObject[R2C, "R2"];
+-   PYNLO$UVCouplingRename = CreateNewNamesForR2UVCouplingObject[UVC, "UV"]; 
++   PYNLO$UVCouplingRename = CreateNewNamesForR2UVCouplingObject[UVC, "UV"];
+ 
+    (* Optimize renaming *)
+-   
++
+ 
+    (* Rename *)
+    R2C = RenameNLOCoupling[#, PYNLO$R2CouplingRename]& /@ R2C;
+@@ -337,12 +337,12 @@
+    UVC = Drop[#, 2]& /@ UVC;
+    R2C = KillDoubles[Join[R2C, UVC]];
+ 
+-   
++
+ 
+    Return[{R2V, R2C}];
+ ];
+-   
+-   
++
++
+ 
+ 
+ (* ::Section:: *)
+@@ -366,22 +366,23 @@
+    outfile = OpenWrite["CT_parameters.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_CTparameters, CTParameter\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_CTparameters, CTParameter\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
+    WriteString[outfile, "\n\n"];
+ 
+ 
+    WriteParameterObject[outfile, #]& /@ (CreateCTParamterObjectEntry /@ list);
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 CTparameter", ToString[Length[list]] <> " CTparameters"] <> " written."];
+    TestQ[FileExistsQ, "CT_parameters.py", "   * CT_parameters.py written.", "   * CT_parameters.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -405,24 +406,25 @@
+    outfile = OpenWrite["CT_couplings.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_couplings, Coupling\n"];
+-   WriteString[outfile, "\nfrom function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_couplings, Coupling\n"];
++   WriteString[outfile, "\nfrom .function_library import ", Sequence @@ Riffle[PY$NewCMathFunctions, ", "], "\n\n"];
+    WriteString[outfile, "\n\n"];
+ 
+ (*Print["In WPYCTCoupl"];
+   Print[InputForm[list]];Print[InputForm[CreateCouplingObjectEntry /@ list]];*)
+ 
+    WriteCouplingObject[outfile, #]& /@ (CreateCouplingObjectEntry /@ list);
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[list] == 1, "1 CTcoupling", ToString[Length[list]] <> " CTcouplings"] <> " written."];
+    TestQ[FileExistsQ, "CT_couplings.py", "   * CT_couplings.py written.", "   * CT_couplings.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -459,8 +461,8 @@
+      pyvertex
+     },
+ 
+-   (* Remove the CC statements, and the bar for Majoranas, 
+-      then introduce the particle names, and finally 
++   (* Remove the CC statements, and the bar for Majoranas,
++      then introduce the particle names, and finally
+       check if we need new Particle object names.
+     *)
+ 
+@@ -472,7 +474,7 @@
+     coupl = {PythonForm[#1], #2, PYFormLoopParticles[#3], #4}& @@@ coupl;
+     colors = Union[First /@ coupl];
+     loops = Union[#[[3]]& /@ coupl];
+-    
++
+     (* We now build replacement rules to identify back the Lorentz and color structures,
+        and how they are convolved.
+      *)
+@@ -483,8 +485,8 @@
+     (* And we then apply these reverse replacements to coupl *)
+     coupl = coupl /. colorreverse /. lorentzreverse /. loopsreverse;
+ 
+-    (* Finally, since a list in Python starts with 0, and not one, we 
+-       have to rescale everything by one unit 
++    (* Finally, since a list in Python starts with 0, and not one, we
++       have to rescale everything by one unit
+      *)
+      coupl = {#1-1, #2-1, #3-1, #4}& @@@ coupl;
+ 
+@@ -506,10 +508,10 @@
+ 
+      (* Return and exit *)
+      Return[pyvertex];
+-                 
++
+ ];
+ 
+-    
++
+ 
+ 
+ (* ::Section:: *)
+@@ -529,7 +531,7 @@
+      WriteString[file, "\n"];
+ 
+ ];
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -553,23 +555,24 @@
+    outfile = OpenWrite["CT_vertices.py"];
+ 
+    WritePYFRHeader[outfile];
+-   WriteString[outfile, "from object_library import all_vertices, all_CTvertices, Vertex, CTVertex\n"];
+-   WriteString[outfile, "import particles as P\n"];
+-   WriteString[outfile, "import CT_couplings as C\n"];
+-   WriteString[outfile, "import lorentz as L\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[outfile, "from .object_library import all_vertices, all_CTvertices, Vertex, CTVertex\n"];
++   WriteString[outfile, "from . import particles as P\n"];
++   WriteString[outfile, "from . import CT_couplings as C\n"];
++   WriteString[outfile, "from . import lorentz as L\n"];
+    WriteString[outfile, "\n\n"];
+ 
+    WriteCTVertexObject[outfile, #1]& /@ MapIndexed[CreateCTVertexObjectEntry, vertlist];
+-   
++
+    Close[outfile];
+-  
++
+    AppendTo[GenInt$LogFile, "   * " <> If[Length[vertlist] == 1, "1 CTvertex", ToString[Length[vertlist]] <> " CTvertices"] <> " written."];
+    TestQ[FileExistsQ, "CT_vertices.py", "   * CT_vertices.py written.", "   * CT_vertices.py not written"];
+ 
+    (* Write the log file *)
+    WriteToLogFile[GenInt$LogFileName];
+ 
+-]; 
++];
+ 
+ 
+ (* ::Section:: *)
+@@ -609,12 +612,12 @@
+    rest = Expand[counterterm - uvterm];
+    uvterm = Expand[Coefficient[uvterm, FR$Eps, -1]/FR$Eps];
+    counterterm = uvterm+rest;
+-   
++
+    Return[{particles, counterterm}];
+ 
+ ];
+ 
+-   
++
+ 
+ 
+ (* ::Section:: *)
+@@ -627,7 +630,7 @@
+       {"validity", "'nlo'"}}
+      ];
+ 
+-   
++
+ 
+ 
+ WriteOutAssumptionObject[name_String,ass_] := Block[{
+@@ -644,17 +647,13 @@
+     file},
+ 
+     asslist = MapIndexed[CreateAssumptionObject, asslist];
+-    
++
+     DeleteFileIfExists["assumptions.py"];
+     file = OpenWrite["assumptions.py"];
+     WritePYFRHeader["assumptions.py"];
+-    WriteString[file, "from object_library import all_assumptions, Assumption\n\n\n"];
++    WriteString[outfile, "from __future__ import absolute_import\n"];
++    WriteString[file, "from .object_library import all_assumptions, Assumption\n\n\n"];
+     Close[file];
+ 
+     WriteOutAssumptionObject["assumptions.py", #]& /@ asslist;
+ ];
+-  
+-    
+-
+-
+-   
+diff -ruN a/Interfaces/UFO/PYRestrictions.m b/Interfaces/UFO/PYRestrictions.m
+--- a/Interfaces/UFO/PYRestrictions.m	2026-10-19 06:25:28.684126475 -0400
++++ b/Interfaces/UFO/PYRestrictions.m	2024-11-15 16:02:10.000000000 -0500
+@@ -8,7 +8,7 @@
+ 
+     Get[file];
+     If[Not[ValueQ[M$Restrictions]] || M$Restrictions === {},
+-       Message[PYRest::NoRestric]; 
++       Message[PYRest::NoRestric];
+        Return[{file,{}}];
+       ];
+ 
+@@ -19,18 +19,18 @@
+ WriteOneSetOfRestrictions[filename_String,list_List] := Block[{intparams, eparams, $Dum,
+    invparamrules = Reverse /@ ParamRules,
+    restrictions = list[[2]], file = list[[1]],
+-   checkint, IsInternal, restlist, ConvertToPY, 
++   checkint, IsInternal, restlist, ConvertToPY,
+    stringname = StringReplace[list[[1]], {".rst" -> ""}], objname, out
+    },
+ 
+    ConvertToPY[{a_,b_}] := {"Param." <> CreateObjectParticleName[ToString[a]], PYString[PythonForm[b]]};
+ 
+-   intparams = Join[First /@ IParamList, 
+-                  Union[Cases[MassList[[2]],{__,Internal}][[All,2]]], 
++   intparams = Join[First /@ IParamList,
++                  Union[Cases[MassList[[2]],{__,Internal}][[All,2]]],
+                   Union[Cases[WidthList[[2]],{__,Internal}][[All,2]]]
+                  ];
+-   eparams = Join[Flatten[$Dum @@@ #& /@ (Last /@ EParamList)] //. $Dum[_,b_]:>First[b], 
+-                  Union[DeleteCases[MassList[[2]],{__,Internal}][[All,2]]], 
++   eparams = Join[Flatten[$Dum @@@ #& /@ (Last /@ EParamList)] //. $Dum[_,b_]:>First[b],
++                  Union[DeleteCases[MassList[[2]],{__,Internal}][[All,2]]],
+                   Union[DeleteCases[WidthList[[2]],{__,Internal}][[All,2]]]
+                  ];
+ 
+@@ -40,16 +40,16 @@
+    (* Check if there are rules that apply for internals *)
+    checkint = DeleteCases[{#,#//.restrictions}& /@ intparams,{a_,a_}];
+    IsInternal = (Length[checkint] =!= 0);
+-    
++
+    (* Get Rules table *)
+    restlist = DeleteCases[{#,#//.restrictions}& /@ eparams,{a_,a_}];
+    restlist = Union[restlist //. ParamRules];
+ 
+    restlist = ConvertToPY /@ restlist;
+    restlist = PYTuple /@ restlist;
+-   
++
+    objname = CreateObjectParticleName[stringname];
+-   
++
+    out = OpenAppend[filename];
+    WriteString[out, objname, " = Restriction(name = ", PYString[stringname], ",\n"];
+    WriteString[out, Sequence @@ Table[" ", {StringLength[objname] + 15}], "restriction = "];
+@@ -61,8 +61,8 @@
+ 
+    Return[IsInternal];
+ ];
+-   
+-   
++
++
+ 
+ 
+ WritePYRestrictions[directory_String, list_List] := Block[{allfiles, out},
+@@ -75,12 +75,12 @@
+    DeleteFileIfExists["restrictions.py"];
+    out = OpenWrite["restrictions.py"];
+    WritePYFRHeader[out];
+-   WriteString[out, "from object_library import all_restrictions, Restriction\n"];
+-   WriteString[out, "import parameters as Param\n\n"];
++   WriteString[outfile, "from __future__ import absolute_import\n"];
++   WriteString[out, "from .object_library import all_restrictions, Restriction\n"];
++   WriteString[out, "from . import parameters as Param\n\n"];
+    Close[out];
+    allfiles = And @@ (WriteOneSetOfRestrictions["restrictions.py",#]& /@ allfiles);
+    If[allfiles,
+       Message[UFORestrict::NoInternal]
+      ];
+ ];
+- 
+diff -ruN a/Interfaces/UFO/PYSplitStructures.m b/Interfaces/UFO/PYSplitStructures.m
+--- a/Interfaces/UFO/PYSplitStructures.m	2026-10-19 06:25:28.684194810 -0400
++++ b/Interfaces/UFO/PYSplitStructures.m	2026-07-30 16:45:22.000000000 -0400
+@@ -13,18 +13,18 @@
+                   SP->L$SP,
+                   ProjP -> L$ProjP,
+                   ProjM->L$ProjM,
+-                  Eps[Index[Lorentz,aa__],Index[Lorentz,b__],Index[Lorentz,c__],Index[Lorentz,d__]]:> L$Eps[Index[Lorentz,aa],Index[Lorentz,b],Index[Lorentz,c],Index[Lorentz,d]]
++                  Eps[Index[Lorentz,a__],Index[Lorentz,b__],Index[Lorentz,c__],Index[Lorentz,d__]]:> L$Eps[Index[Lorentz,a],Index[Lorentz,b],Index[Lorentz,c],Index[Lorentz,d]]
+ };
+ 
+ (* Patterns for Color *)
+ PatternColor = {f[x_,y_,zz_] :> C$f[x,y,zz],
+-                f[x_,y_,zz_]f[aa_,b_,zz_]:> C$ff[x,y,aa,b],
++                f[x_,y_,zz_]f[a_,b_,zz_]:> C$ff[x,y,a,b],
+                 T -> C$T,
+                 IndexDelta[Index[Colour,Ext[x_]],Index[Colour,Ext[y_]]]:> C$IndexDelta[Index[Colour,Ext[x]],Index[Colour,Ext[y]]],
+                 IndexDelta[Index[Gluon,Ext[x_]],Index[Gluon,Ext[y_]]]:> C$IndexDelta[Index[Gluon,Ext[x]],Index[Gluon,Ext[y]]],
+                 IndexDelta[Index[Sextet,Ext[x_]],Index[Sextet,Ext[y_]]]:> C$IndexDelta[Index[Sextet,Ext[x]],Index[Sextet,Ext[y]]],
+                 dSUN -> C$dSUN,
+-                Eps[Index[Colour,aa__],Index[Colour,b__],Index[Colour,c__]]:> C$Eps[Index[Colour,aa],Index[Colour,b],Index[Colour,c]],
++                Eps[Index[Colour,a__],Index[Colour,b__],Index[Colour,c__]]:> C$Eps[Index[Colour,a],Index[Colour,b],Index[Colour,c]],
+                 T6 :> C$T6,
+                 K6 :> C$K6,
+                 K6bar :> C$K6bar
+@@ -70,7 +70,7 @@
+ PYVertexList[input_]  := First /@(Take[#,{2,2}]&/@ input);
+ 
+ (* Gather terms with similar coupling except for vertices with more than two fermions (exception added by celine)*)
+-gatherLikes[input_]:= If[Length[Union[Cases[input[[All,1]],Index[Spin,Ext[aa_]],\[Infinity]]]]<3,Gather[input,NumericQ[#1[[2]]/#2[[2]]]&],input]
++gatherLikes[input_]:= If[Length[Union[Cases[input[[All,1]],Index[Spin,Ext[a_]],\[Infinity]]]]<3,Gather[input,NumericQ[#1[[2]]/#2[[2]]]&],input]
+ 
+ (* Adjust Couplings, Lorentzes *)
+ Renorm[input_,input2_] := {input[[1]]*input[[2]]/input2,input2}
+@@ -79,7 +79,7 @@
+ 
+ (* Reassemble addition except for vertices with more than two fermions (exception added by celine) *)
+ ReassemblePlus[input_] := Module[{TempL = Length[input],TempI = Replace[input,List->Plus,1,Heads->True]},If[TempL>1,{TempI[[1]],TempI[[2]]/TempL},First[input]]]
+-PutTogether[input_] := If[Length[Union[Cases[input[[All,1]],Index[Spin,Ext[aa_]],\[Infinity]]]]<3,Drop[ReassemblePlus /@ ShiftConstants /@ input ,1],Drop[ input ,1]]
++PutTogether[input_] := If[Length[Union[Cases[input[[All,1]],Index[Spin,Ext[a_]],\[Infinity]]]]<3,Drop[ReassemblePlus /@ ShiftConstants /@ input ,1],Drop[ input ,1]]
+ 
+ (*Test if two lorentz structures are the same up to the name of the summed spin indices*)
+ SameLorentzQ[l1_,l2_]:=(
+@@ -89,11 +89,11 @@
+ 
+ (*Return the number of different lorentz structures*)
+ NumberOfLorentz[ls_]:=Length[Union[Flatten[
+-  ls[[All,All,1]]]//.{L$Ga[aa__,b_,c_]L$Ga[d__,c_,e_]->L$Ga[aa,d,b,e],
+-                       L$Ga[aa__,b_,c_]L$SlashedP[d_,c_,e_]->L$Ga[aa,L$Mom[d],b,e],
+-                       L$SlashedP[aa_,b_,c_]L$Ga[d__,c_,e_]->L$Ga[aa,L$Mom[d],b,e],
+-                       L$SlashedP[aa_,b_,c_]L$SlashedP[d_,c_,e_]->L$Ga[L$Mom[aa],L$Mom[d],b,e]}/.
+-   {L$Ga[aa__,b_,c_]L$ProjM[c_,e_]->L$GaM[aa,d,b,e],L$Ga[aa__,b_,c_]L$ProjP[c_,e_]->L$GaP[aa,d,b,e]},
++  ls[[All,All,1]]]//.{L$Ga[a__,b_,c_]L$Ga[d__,c_,e_]->L$Ga[a,d,b,e],
++                       L$Ga[a__,b_,c_]L$SlashedP[d_,c_,e_]->L$Ga[a,L$Mom[d],b,e],
++                       L$SlashedP[a_,b_,c_]L$Ga[d__,c_,e_]->L$Ga[a,L$Mom[d],b,e],
++                       L$SlashedP[a_,b_,c_]L$SlashedP[d_,c_,e_]->L$Ga[L$Mom[a],L$Mom[d],b,e]}/.
++   {L$Ga[a__,b_,c_]L$ProjM[c_,e_]->L$GaM[a,d,b,e],L$Ga[a__,b_,c_]L$ProjP[c_,e_]->L$GaP[a,d,b,e]},
+   SameTest->SameLorentzQ]];
+ 
+ (* Structure list uses the above to make a list of just lorentzes,colors,couplings *) 
+@@ -115,8 +115,8 @@
+ (* Rules to write the Python format for Helas -> Maybe some of these should be moved to python form? *) 
+ IndexReplace = Index[x_,Ext[y_Integer]]:> y;
+ 
+-HelasConvention = {L$TensDot[x_[aa___],y_[b___]][Index[Spin,Ext[p_Integer]],Index[Spin,Ext[q_Integer]]] :> x[aa,p,int$]y[b,int$,q],
+-L$TensDot[x_[aa___],y_][Index[Spin,Ext[p_Integer]],Index[Spin,Ext[q_Integer]]] :> x[aa,p,int$]y[int$,q],
++HelasConvention = {L$TensDot[x_[a___],y_[b___]][Index[Spin,Ext[p_Integer]],Index[Spin,Ext[q_Integer]]] :> x[a,p,int$]y[b,int$,q],
++L$TensDot[x_[a___],y_][Index[Spin,Ext[p_Integer]],Index[Spin,Ext[q_Integer]]] :> x[a,p,int$]y[int$,q],
+ L$SlashedP[x_Integer,Index[Spin,Ext[y_Integer]],Index[Spin,Ext[zz_Integer]]]:> L$Ga[a$,y,zz]L$FV[a$,x],
+ L$SP[x_,y_] :> L$FV[a$,x]L$FV[a$,y],L$FV[x_,y_]:> L$FV[y,x]};
+ 
+diff -ruN a/Interfaces/UFO/PythonForm.m b/Interfaces/UFO/PythonForm.m
+--- a/Interfaces/UFO/PythonForm.m	2026-10-19 06:25:28.687346664 -0400
++++ b/Interfaces/UFO/PythonForm.m	2024-11-15 16:02:10.000000000 -0500
+@@ -480,17 +480,17 @@
+ (*Python Format*)
+ 
+ 
+-PY$InputForm = {Complex[aa_,b_] :> aa + b * PYComplexI, 
++PY$InputForm = {Complex[a_,b_] :> a + b * PYComplexI, 
+                 Power[x_, 1/2] :> FRSqrt[x],
+                 Power[x_, -1/2] :> 1/FRSqrt[x],
+-                E^aa_.:>FRExp[aa],
+-                Less[aa_,b_]:>PythonForm[aa]<>"<"<>PythonForm[b],
+-                LessEqual[aa_,b_]:>PythonForm[aa]<>"<="<>PythonForm[b],
+-                Greater[aa_,b_]:>PythonForm[aa]<>">"<>PythonForm[b],
+-                GreaterEqual[aa_,b_]:>PythonForm[aa]<>">="<>PythonForm[b],
+-                Equal[aa_,b_]:>PythonForm[aa]<>"=="<>PythonForm[b],
+-                Unequal[aa_,b_]:>PythonForm[aa]<>"<="<>PythonForm[b],
+-                If[aa_,b_,c_]:>"( "<> PythonForm[b]<>" if "<>PythonForm[aa]<>" else "<>PythonForm[c]<>" )"};
++                E^a_.:>FRExp[a],
++                Less[a_,b_]:>PythonForm[a]<>"<"<>PythonForm[b],
++                LessEqual[a_,b_]:>PythonForm[a]<>"<="<>PythonForm[b],
++                Greater[a_,b_]:>PythonForm[a]<>">"<>PythonForm[b],
++                GreaterEqual[a_,b_]:>PythonForm[a]<>">="<>PythonForm[b],
++                Equal[a_,b_]:>PythonForm[a]<>"=="<>PythonForm[b],
++                Unequal[a_,b_]:>PythonForm[a]<>"<="<>PythonForm[b],
++                If[a_,b_,c_]:>"( "<> PythonForm[b]<>" if "<>PythonForm[a]<>" else "<>PythonForm[c]<>" )"};
+ PY$OutputForm = {"PYTuple" -> "", "ADDSLASH" -> "\\'","\""->"",".and."->" and ",".or."->" or "};
+ 
+ PY$IndexForm = {Index[_, Ext[k_]] :> k,
+diff -ruN a/ToolBox.m b/ToolBox.m
+--- a/ToolBox.m	2026-10-19 06:25:28.687667020 -0400
++++ b/ToolBox.m	2025-03-24 14:15:44.000000000 -0400
+@@ -453,7 +453,7 @@
+       (* As we know already that the kinetic terms are diagonal, we removed non diagonal remnants (e.g. proportinal to cw^2 + sw^2 -1 *)
+       fcl1 = Select[fcl1, #[[1]] === anti[#[[2]]]&];
+       Do[tmp=Append[tmp,Plus@@((lag[[#]]&)@@@Position[fcl,fcl1[[nfcl]]])],{nfcl,Length[fcl1]}];
+-      fcl=fcl1/._?GhostFieldQ->"U"/.{_?ScalarFieldQ->"S",_?VectorFieldQ->"V",_?DiracFieldQ->"F",_?MajoranaFieldQ->"F",_?Spin2FieldQ->"T"};
++      fcl=fcl1/._?GhostFieldQ->"U"/.{_?ScalarFieldQ->"S",_?VectorFieldQ->"V",_?DiracFieldQ->"F",_?MajoranaFieldQ->"F",_?Spin2FieldQ->"T",_?Spin32FieldQ->"R"};
+       (* Loop over all terms *)
+       Do[Which[fcl[[$nn]] === {"S","S"},
+          If[Not[FreeQ[tmp[[$nn]],del[del[_,_],_]]],
+@@ -516,7 +516,8 @@
+       (* As we know already that the kinetic terms are diagonal, we removed non diagonal remnants (e.g. proportinal to cw^2 + sw^2 -1 *)
+       fcl1 = Select[fcl1, #[[1]] === anti[#[[2]]]&];
+       Do[tmp=Append[tmp,Plus@@((lag[[#]]&)@@@Position[fcl,fcl1[[nfcl]]])],{nfcl,Length[fcl1]}];
+-      fcl=fcl1/._?GhostFieldQ->"U"/.{_?ScalarFieldQ->"S",_?VectorFieldQ->"V",_?DiracFieldQ->"F",_?MajoranaFieldQ->"F",_?Spin2FieldQ->"T"};
++      (* Add debugging for field types *)
++      fcl=fcl1/._?GhostFieldQ->"U"/.{_?ScalarFieldQ->"S",_?VectorFieldQ->"V",_?DiracFieldQ->"F",_?MajoranaFieldQ->"F",_?Spin2FieldQ->"T",_?Spin32FieldQ->"R"};
+       (* Loop over all terms *)
+       Do[Which[fcl[[$nn]] === {"S","S"},
+             tmpterm=tmp[[$nn]]/.{FR$deltat[xx_]->FR$deltat[xx],_?FieldQ->1};
+@@ -566,6 +567,16 @@
+                mnumval=NumericalValue[mval]];
+                If[Re[mnumval]^2<N[10^(-10)],mnumval=0.];
+                parttmp=If[AntiFieldQ[fcl1[[$nn,1]]], anti[fcl1[[$nn,1]]], fcl1[[$nn,1]]];
++               res=Append[res,{parttmp,mval,mnumval}],
++         fcl[[$nn]] === {"R","R"},
++               tmpterm=tmp[[$nn]]/.{FR$deltat[xx_]->FR$deltat[xx],_?FieldQ->1}/.Dot[1,1]->1/.(ProjP|ProjM)[__]->1/2;
++               numtmp = NumericalValue[tmpterm];
++               If[Not[NumericQ[numtmp]], Print["Warning: non numerical value encountered for ", ToString[fcl1[[$nn]]], ". Unable to get numerical value."]];
++               If[(Re[numtmp]>0)&&(Im[numtmp]<N[10^(-12)]), Print["Warning: mass term for ", ToString[fcl1[[$nn]]], "seems not to have the correct sign."]];
++               mval=-tmpterm;
++               mnumval=NumericalValue[mval];
++               If[Re[mnumval]<N[10^(-10)],mnumval=0.];
++               parttmp=If[AntiFieldQ[fcl1[[$nn,1]]], anti[fcl1[[$nn,1]]], fcl1[[$nn,1]]];
+                res=Append[res,{parttmp,mval,mnumval}]],{$nn,Length[fcl1]}];
+                res=({#1,#2,If[Im[#3]<N[10^(-13)]Re[#3],Re[#3],#3]}&)@@@res;
+                res=DeleteCases[res,{_,_,0.}];
