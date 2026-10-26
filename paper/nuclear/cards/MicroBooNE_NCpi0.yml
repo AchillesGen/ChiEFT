@@ -1,0 +1,80 @@
+# MicroBooNE NCpi0 (WireCell). The sample's isSignal accepts any neutrino species,
+# and scales a numu-only prediction by a hardcoded 0.975 when it sees nothing else,
+# so all four BNB components are generated here and that approximation is avoided.
+Main:
+  NEvents: 500000
+  HardCuts: False
+  EventCuts: false
+  DoRotate: false
+  RunDecays: False
+
+SherpaOptions:
+  MODEL: ChiPT_UFO
+  UFO_PARAM_CARD: param_card.dat
+  # The UFO has no eta or kaons; keep Sherpa's default entries stable so the
+  # Achilles cascade does not look for their decays.
+  PARTICLE_DATA:
+    221: {Mass: 0.547862, Width: 0.0, Stable: 1}
+    311: {Mass: 0.497677, Width: 0.0, Stable: 1}
+    321: {Mass: 0.493677, Width: 0.0, Stable: 1}
+
+Processes:
+  - Leptons: [14, [14]]
+  - Leptons: [-14, [-14]]
+  - Leptons: [12, [12]]
+  - Leptons: [-12, [-12]]
+
+Beams:
+  - Beam:
+      PID: 14
+      Beam Params:
+        Type: Spectrum
+        Histogram: flux/microboone_NCpi0_numu.dat
+  - Beam:
+      PID: -14
+      Beam Params:
+        Type: Spectrum
+        Histogram: flux/microboone_NCpi0_numubar.dat
+  - Beam:
+      PID: 12
+      Beam Params:
+        Type: Spectrum
+        Histogram: flux/microboone_NCpi0_nue.dat
+  - Beam:
+      PID: -12
+      Beam Params:
+        Type: Spectrum
+        Histogram: flux/microboone_NCpi0_nuebar.dat
+
+Cascade:
+  Run: True
+  Interactions: !include "data/default/VirtResInteractions.yml"
+  Step: 0.04
+  Probability: Cylinder
+  InMedium: None
+  PotentialProp: False
+  Algorithm: Base
+
+NuclearModels:
+  - NuclearModel:
+      Model: QESpectral
+      FormFactorFile: "FormFactors.yml"
+      SpectralP: data/Spectral_Functions/pke40p_tot.data
+      SpectralN: data/Spectral_Functions/pke40n_tot.data
+      Ward: None
+  - NuclearModel:
+      Model: FortranModel
+      Name: RES_Spectral_Func
+      FormFactorFile: "FormFactors.yml"
+      ConfigFile: data/info_Ar40_pke.data
+      Ward: None
+
+Nuclei:
+  - Nucleus: !include "data/default/40Ar.yml"
+
+Options: !include "data/default/OptionDefaults.yml"
+
+Backend:
+  Name: SherpaFull
+  Options:
+    FormFactorFile: "FormFactors.yml"

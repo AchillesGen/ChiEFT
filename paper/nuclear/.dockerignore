@@ -1,0 +1,4 @@
+# Only the patches are needed as build context; work/ holds GBs of events.
+*
+!patches/
+!patches/**

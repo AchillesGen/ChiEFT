@@ -1,0 +1,222 @@
+# The NUISANCE samples, grouped by the Achilles run card whose events they share.
+#
+#   data_per        the published convention: per nucleon (divide the per-atom
+#                   cross section by target_nucleons) or per atom/molecule
+#   target_label    the denominator, for axis labels
+#   data_scale      factor for a NUISANCE data table shipped in the wrong units
+#   bin_edges       physical edges for samples NUISANCE bins by bin number
+#   smearing        Wiener-SVD A_C matrix applied to the prediction
+#   solid_angle     sr the electron prediction is divided by
+#
+# Running width: every nu_mu CC, nu NC and e 1pi hard process is reweighted by the
+# tables of ../free_nucleon/tables.py (see running_width.py); the result is the
+# "running_width" prediction next to the "nominal" one.
+running_width:
+  cc: ../free_nucleon/output/running_width_cc.csv
+  nc: ../free_nucleon/output/running_width_nc.csv
+  electron: ../free_nucleon/output/running_width_electron.csv
+
+experiments:
+  # MINERvA low-energy numu on CH; NUISANCE applies each sample's own cuts.
+  - name: MINERvA
+    card: cards/MINERvA.yml
+    data_per: nucleon
+    target_nucleons: 13
+    target_label: nucleon
+    samples:
+      - MINERvA_CC0pinp_STV_XSec_1Ddalphat_nu
+      - MINERvA_CC0pinp_STV_XSec_1Ddphit_nu
+      - MINERvA_CC0pinp_STV_XSec_1Ddpt_nu
+      - MINERvA_CC0pinp_STV_XSec_1Dpmu_nu
+      - MINERvA_CC0pinp_STV_XSec_1Dpnreco_nu
+      - MINERvA_CC0pinp_STV_XSec_1Dpprot_nu
+      - MINERvA_CC0pinp_STV_XSec_1Dthmu_nu
+      - MINERvA_CC0pinp_STV_XSec_1Dthprot_nu
+      - MINERvA_CC1pi0_XSec_1DWexp_nu
+      - MINERvA_CC1pi0_XSec_1DPPi0Mass_nu
+      - MINERvA_CC1pi0_XSec_1DPPi0MassDelta_nu
+      - MINERvA_CC1pi0_XSec_1DTpi_nu
+      - MINERvA_CC1pi0_XSec_1DQ2_nu
+      - MINERvA_CC1pip_XSec_1DTpi_nu_2017
+      - MINERvA_CC1pip_XSec_1DQ2_nu_2017
+
+  - name: MicroBooNE_CC
+    card: cards/MicroBooNE_CC.yml
+    data_per: atom
+    target_label: Ar
+    samples:
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaAlphaT_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaPhiT_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaPn_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaPT_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaPtx_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DDeltaPty_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DECal_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DMuonCosTheta_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DMuonMomentum_nu
+      - MicroBooNE_CC1Mu1p_XSec_1DProtonCosTheta_nu
+      - MicroBooNE_CC1Mu2p_XSec_1DDeltaPT_nu
+      - MicroBooNE_CC1Mu2p_XSec_1DOpening_Angle_Mu_Both_nu
+      - MicroBooNE_CC1Mu2p_XSec_1DOpening_Angle_Protons_Lab_nu
+      - MicroBooNE_CC1MuNp_XSec_1Dcosmu_nu
+      - MicroBooNE_CC1MuNp_XSec_1Dcosp_nu
+      - MicroBooNE_CC1MuNp_XSec_1DPmu_nu
+      - MicroBooNE_CC1MuNp_XSec_1DPp_nu
+      - MicroBooNE_CC1MuNp_XSec_1Dthetamup_nu
+
+  - name: T2K
+    card: cards/T2K.yml
+    data_per: nucleon
+    target_nucleons: 13
+    target_label: nucleon
+    samples:
+      - T2K_CC0pinp_STV_XSec_1Ddat_nu
+      - T2K_CC0pinp_STV_XSec_1Ddphit_nu
+      - T2K_CC0pinp_STV_XSec_1Ddpt_nu
+      - T2K_CC1pipNp_CH_XSec_1DdaT_nu
+      - T2K_CC1pipNp_CH_XSec_1DdpTT_nu
+      - T2K_CC1pipNp_CH_XSec_1DpN_nu
+      - T2K_CC1pip_CH_XSec_1Dppi_nu
+      - T2K_CC1pip_CH_XSec_1DQ2_nu
+
+  # MiniBooNE numu on mineral oil. The published cross sections are per CH2
+  # molecule, so the run card lists 1H twice and nothing is divided out here.
+  - name: MiniBooNE
+    card: cards/MiniBooNE.yml
+    data_per: atom
+    target_label: CH$_2$
+    samples:
+      - MiniBooNE_CC1pip_XSec_1DTpi_nu
+      - MiniBooNE_CC1pip_XSec_1DQ2_nu
+      - MiniBooNE_CC1pi0_XSec_1Dppi0_nu
+
+  # MicroBooNE NCpi0 (WireCell): needs patches/0001 in NUISANCE (docker/Dockerfile).
+  - name: MicroBooNE_NCpi0
+    card: cards/MicroBooNE_NCpi0.yml
+    data_per: nucleon          # integrates to ~3.5e-40 cm^2, i.e. the per-nucleon
+    target_nucleons: 40        # reading of the published ~1.2e-38 cm^2/Ar
+    target_label: nucleon
+    samples:
+      - MicroBooNE_NCpi0_XSec_XpPpi0_nu
+      - MicroBooNE_NCpi0_XSec_XpCosThetaPi0_nu
+
+  # Inclusive electron scattering (NUISANCE ElectronData samples, needs
+  # patches/0002).  The cross section is d2sigma/dOmega dq0 per nucleus; the
+  # selection accepts +-4 deg around the quoted angle, see solid_angle.
+  - name: e12C_560
+    card: cards/e12C_560.yml
+    data_per: atom             # nb/sr/GeV per 12C nucleus
+    target_label: "$^{12}$C sr"
+    samples:
+      - ElectronData_6_12_0.560_36.000_Barreau:1983ht
+      - ElectronData_6_12_0.560_60.000_Barreau:1983ht
+
+  - name: e12C_961
+    card: cards/e12C_961.yml
+    data_per: atom
+    target_label: "$^{12}$C sr"
+    samples:
+      - ElectronData_6_12_0.961_37.500_Sealock:1989nx
+
+  - name: e12C_1299
+    card: cards/e12C_1299.yml
+    data_per: atom
+    target_label: "$^{12}$C sr"
+    samples:
+      - ElectronData_6_12_1.299_37.500_Sealock:1989nx
+
+  - name: e16O_880
+    card: cards/e16O_880.yml
+    data_per: atom
+    target_label: "$^{16}$O sr"
+    samples:
+      - ElectronData_8_16_0.8800_32.0_Anghinolfi:1996vm
+
+# MiniBooNE's shipped dsigma/dQ2 table (MiniBooNE/CC1pip/ccpipXSec_Q2.txt) is written
+# with an "E-45" exponent where the paper's table is 1e-39 cm^2/GeV^2, so it comes out
+# 1e6 low: it integrates to 2.9e-44 cm^2 where the same analysis' dsigma/dTpi and
+# sigma(Enu) tables both give 2.5e-38 cm^2/CH2. Put it back on their footing.
+data_scale:
+  MiniBooNE_CC1pip_XSec_1DQ2_nu: 1.0e+6
+
+# The NCpi0 samples' NUISANCE histogram is indexed by bin number (one sample stacks
+# several blocks, so it has no single physical axis). These are the physical edges of
+# the two single-block samples, from data/MicroBooNE/NCpi0/real_bins.txt.
+bin_edges:
+  MicroBooNE_NCpi0_XSec_XpPpi0_nu:
+    [0.0, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.51, 0.66, 1.2]
+  MicroBooNE_NCpi0_XSec_XpCosThetaPi0_nu:
+    [-1.0, -0.8, -0.6, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+     0.7, 0.8, 0.9, 1.0]
+
+# Wiener-SVD additional smearing, the A_C blocks of MicroBooNE_NCpi0_data_release.root
+# for these two samples. The unfolded data is only comparable to A_C * prediction.
+smearing:
+  MicroBooNE_NCpi0_XSec_XpPpi0_nu: smearing/MicroBooNE_NCpi0_XSec_XpPpi0_nu_Ac.csv
+  MicroBooNE_NCpi0_XSec_XpCosThetaPi0_nu:
+    smearing/MicroBooNE_NCpi0_XSec_XpCosThetaPi0_nu_Ac.csv
+
+# 2*pi*(cos(theta-4 deg) - cos(theta+4 deg)), the acceptance window NUISANCE's
+# Electron_NThetaBins * Electron_ThetaWidth defaults (4 x 1 deg) cut on. Dividing by it
+# treats d2sigma/dOmega dq0 as flat across 8 deg, the same approximation the sample's
+# own (commented out) normalisation made.
+solid_angle:
+  ElectronData_6_12_0.560_36.000_Barreau:1983ht: 0.515244
+  ElectronData_6_12_0.560_60.000_Barreau:1983ht: 0.759145
+  ElectronData_6_12_0.961_37.500_Sealock:1989nx: 0.533632
+  ElectronData_6_12_1.299_37.500_Sealock:1989nx: 0.533632
+  ElectronData_8_16_0.8800_32.0_Anghinolfi:1996vm: 0.464520
+
+# Axis labels (NUISANCE reports "XVar"); units follow each sample's published binning.
+labels:
+  MINERvA_CC0pinp_STV_XSec_1Ddalphat_nu: ['$\delta\alpha_T$', 'deg']
+  MINERvA_CC0pinp_STV_XSec_1Ddphit_nu: ['$\delta\phi_T$', 'deg']
+  MINERvA_CC0pinp_STV_XSec_1Ddpt_nu: ['$\delta p_T$', 'GeV/c']
+  MINERvA_CC0pinp_STV_XSec_1Dpmu_nu: ['$p_\mu$', 'GeV/c']
+  MINERvA_CC0pinp_STV_XSec_1Dpnreco_nu: ['$p_n$', 'GeV/c']
+  MINERvA_CC0pinp_STV_XSec_1Dpprot_nu: ['$p_p$', 'GeV/c']
+  MINERvA_CC0pinp_STV_XSec_1Dthmu_nu: ['$\theta_\mu$', 'deg']
+  MINERvA_CC0pinp_STV_XSec_1Dthprot_nu: ['$\theta_p$', 'deg']
+  MINERvA_CC1pi0_XSec_1DWexp_nu: ['$W_{\rm exp}$', 'GeV']
+  MINERvA_CC1pi0_XSec_1DPPi0Mass_nu: ['$M_{p\pi^0}$', 'GeV']
+  MINERvA_CC1pi0_XSec_1DPPi0MassDelta_nu: ['$M_{p\pi^0}$ ($\Delta$ sample)', 'GeV']
+  MINERvA_CC1pi0_XSec_1DTpi_nu: ['$T_\pi$', 'GeV']
+  MINERvA_CC1pi0_XSec_1DQ2_nu: ['$Q^2$', 'GeV$^2$']
+  MINERvA_CC1pip_XSec_1DTpi_nu_2017: ['$T_\pi$', 'MeV']
+  MINERvA_CC1pip_XSec_1DQ2_nu_2017: ['$Q^2$', 'GeV$^2$']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaAlphaT_nu: ['$\delta\alpha_T$', 'deg']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaPhiT_nu: ['$\delta\phi_T$', 'deg']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaPn_nu: ['$\delta p_n$', 'GeV/c']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaPT_nu: ['$\delta p_T$', 'GeV/c']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaPtx_nu: ['$\delta p_{T,x}$', 'GeV/c']
+  MicroBooNE_CC1Mu1p_XSec_1DDeltaPty_nu: ['$\delta p_{T,y}$', 'GeV/c']
+  MicroBooNE_CC1Mu1p_XSec_1DECal_nu: ['$E^{\rm cal}$', 'GeV']
+  MicroBooNE_CC1Mu1p_XSec_1DMuonCosTheta_nu: ['$\cos\theta_\mu$', '']
+  MicroBooNE_CC1Mu1p_XSec_1DMuonMomentum_nu: ['$p_\mu$', 'GeV/c']
+  MicroBooNE_CC1Mu1p_XSec_1DProtonCosTheta_nu: ['$\cos\theta_p$', '']
+  MicroBooNE_CC1Mu2p_XSec_1DDeltaPT_nu: ['$\delta p_T$', 'GeV/c']
+  MicroBooNE_CC1Mu2p_XSec_1DOpening_Angle_Mu_Both_nu: ['$\cos\gamma_{\mu,p_L+p_R}$', '']
+  MicroBooNE_CC1Mu2p_XSec_1DOpening_Angle_Protons_Lab_nu: ['$\cos\gamma_{p_L,p_R}$', '']
+  MicroBooNE_CC1MuNp_XSec_1Dcosmu_nu: ['$\cos\theta_\mu$', '']
+  MicroBooNE_CC1MuNp_XSec_1Dcosp_nu: ['$\cos\theta_p$', '']
+  MicroBooNE_CC1MuNp_XSec_1DPmu_nu: ['$p_\mu$', 'GeV/c']
+  MicroBooNE_CC1MuNp_XSec_1DPp_nu: ['$p_p$', 'GeV/c']
+  MicroBooNE_CC1MuNp_XSec_1Dthetamup_nu: ['$\theta_{\mu p}$', 'rad']
+  T2K_CC0pinp_STV_XSec_1Ddat_nu: ['$\delta\alpha_T$', 'rad']
+  T2K_CC0pinp_STV_XSec_1Ddphit_nu: ['$\delta\phi_T$', 'rad']
+  T2K_CC0pinp_STV_XSec_1Ddpt_nu: ['$\delta p_T$', 'GeV/c']
+  T2K_CC1pipNp_CH_XSec_1DdaT_nu: ['$\delta\alpha_T$', 'deg']
+  T2K_CC1pipNp_CH_XSec_1DdpTT_nu: ['$\delta p_{TT}$', 'MeV/c']
+  T2K_CC1pipNp_CH_XSec_1DpN_nu: ['$p_N$', 'MeV/c']
+  T2K_CC1pip_CH_XSec_1Dppi_nu: ['$p_\pi$', 'GeV/c']
+  T2K_CC1pip_CH_XSec_1DQ2_nu: ['$Q^2$', 'GeV$^2$']
+  MiniBooNE_CC1pip_XSec_1DTpi_nu: ['$T_\pi$', 'MeV']
+  MiniBooNE_CC1pip_XSec_1DQ2_nu: ['$Q^2$', 'GeV$^2$']
+  MiniBooNE_CC1pi0_XSec_1Dppi0_nu: ['$p_{\pi^0}$', 'GeV/c']
+  MicroBooNE_NCpi0_XSec_XpPpi0_nu: ['$p_{\pi^0}$', 'GeV/c']
+  MicroBooNE_NCpi0_XSec_XpCosThetaPi0_nu: ['$\cos\theta_{\pi^0}$', '']
+  ElectronData_6_12_0.560_36.000_Barreau:1983ht: ['$\omega$', 'GeV']
+  ElectronData_6_12_0.560_60.000_Barreau:1983ht: ['$\omega$', 'GeV']
+  ElectronData_6_12_0.961_37.500_Sealock:1989nx: ['$\omega$', 'GeV']
+  ElectronData_6_12_1.299_37.500_Sealock:1989nx: ['$\omega$', 'GeV']
+  ElectronData_8_16_0.8800_32.0_Anghinolfi:1996vm: ['$\omega$', 'GeV']

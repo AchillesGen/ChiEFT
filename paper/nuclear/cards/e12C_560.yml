@@ -1,0 +1,72 @@
+# Inclusive e-12C at 560 MeV (Barreau:1983ht), 36 deg and 60 deg. One generation
+# serves both: the cut below spans the two acceptance windows.
+#
+# NUISANCE's Durham samples accept |theta_e - theta_0| < Electron_NThetaBins *
+# Electron_ThetaWidth = 4 deg, so the generation cut below is that window with a
+# 1 deg margin. It is deliberately tight: the EM cross section grows like
+# 1/sin^4(theta/2), and opening the cut up would spend the run forward of the
+# measured angles.
+Main:
+  NEvents: 500000
+  HardCuts: True
+  EventCuts: false
+  DoRotate: false
+  RunDecays: False
+
+SherpaOptions:
+  MODEL: ChiPT_UFO
+  UFO_PARAM_CARD: param_card.dat
+  # The UFO has no eta or kaons; keep Sherpa's default entries stable so the
+  # Achilles cascade does not look for their decays.
+  PARTICLE_DATA:
+    221: {Mass: 0.547862, Width: 0.0, Stable: 1}
+    311: {Mass: 0.497677, Width: 0.0, Stable: 1}
+    321: {Mass: 0.493677, Width: 0.0, Stable: 1}
+
+Processes:
+  - Leptons: [11, [11]]
+
+Beams:
+  - Beam:
+      PID: 11
+      Beam Params:
+        Type: Monochromatic
+        Energy: 560
+
+Cascade:
+  Run: True
+  Interactions: !include "data/default/VirtResInteractions.yml"
+  Step: 0.04
+  Probability: Cylinder
+  InMedium: None
+  PotentialProp: False
+  Algorithm: Base
+
+NuclearModels:
+  - NuclearModel:
+      Model: QESpectral
+      FormFactorFile: "FormFactors.yml"
+      SpectralP: data/Spectral_Functions/pke12p_tot.data
+      SpectralN: data/Spectral_Functions/pke12n_tot.data
+      Ward: None
+  - NuclearModel:
+      Model: FortranModel
+      Name: RES_Spectral_Func
+      FormFactorFile: "FormFactors.yml"
+      ConfigFile: data/info_C12_pke.data
+      Ward: None
+
+Nuclei:
+  - Nucleus: !include "data/default/12C.yml"
+
+HardCuts:
+  - Type: AngleTheta
+    PIDs: 11
+    range: [31., 65.]
+
+Options: !include "data/default/OptionDefaults.yml"
+
+Backend:
+  Name: SherpaFull
+  Options:
+    FormFactorFile: "FormFactors.yml"
