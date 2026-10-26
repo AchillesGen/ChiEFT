@@ -1,0 +1,45 @@
+# gamma n -> n pi0 total cross section: NOT a SAID SGT export (SAID has none for this channel). Obtained by us on 2026-09-08
+# by integrating the SAID differential cross sections (said_gn_npi0_DSG.csv, SAID database export of 2026-09-08) with a weighted
+# Legendre fit of degree 3 to each angular distribution, sigma = 4 pi a_0. err_ub is the fit (statistical) error only;
+# Briscoe et al. quote ~6% systematic on the total. sigma_SM95_ub = the same integration applied to the SAID SM95 solution values.
+# BR19: Briscoe et al. (A2), PRC 100, 065205 (2019), arXiv:1908.02730 [A2:2019yud], quasi-free neutron, 290-813 MeV, GWU-ITEP FSI correction
+# DI18: Dieterle et al. (A2), PRC 97, 065205 (2018), arXiv:1805.10504 [A2:2018jcd], quasi-free neutron, 0.45-1.4 GeV, FSI from free/quasi-free proton ratio
+# The two sets are analyses of A2 deuteron data with different nuclear corrections; they differ by ~20% at 450-500 MeV and agree above 600 MeV.
+# Same column layout as the other said_*_SGT.csv files so the figure scripts read it unchanged.
+E_gamma_MeV,sigma_exp_ub,err_ub,sigma_SM95_ub,experiment
+290.00,216.76,4.72,235.83,BR19
+309.00,270.64,5.44,298.58,BR19
+329.00,287.76,4.82,312.62,BR19
+349.00,258.24,3.82,277.48,BR19
+369.00,212.80,3.01,226.46,BR19
+389.00,174.51,2.48,180.29,BR19
+411.00,143.65,2.02,140.85,BR19
+431.00,116.69,1.73,114.28,BR19
+446.20,77.97,1.22,98.28,DI18
+450.00,98.02,1.47,95.20,BR19
+463.10,71.25,1.38,84.44,DI18
+469.00,81.81,1.26,80.51,BR19
+480.10,59.34,0.93,73.33,DI18
+492.00,65.30,1.06,67.10,BR19
+497.20,52.09,0.87,64.34,DI18
+512.00,58.37,1.11,58.22,BR19
+514.50,47.51,0.75,56.97,DI18
+530.00,48.00,0.76,51.79,BR19
+531.90,42.17,0.66,50.94,DI18
+549.50,39.46,0.56,45.85,DI18
+551.00,40.89,0.67,45.75,BR19
+567.30,35.78,0.47,41.53,DI18
+570.00,36.62,0.57,41.33,BR19
+585.20,32.85,0.42,38.13,DI18
+589.00,33.05,0.52,37.70,BR19
+603.30,31.12,0.37,35.22,DI18
+610.00,30.05,0.49,34.53,BR19
+621.50,29.86,0.31,32.91,DI18
+628.00,25.97,0.51,32.52,BR19
+639.80,28.89,0.30,31.32,DI18
+650.00,25.67,0.51,30.88,BR19
+658.40,28.70,0.32,30.36,DI18
+670.00,25.70,0.47,30.12,BR19
+677.00,28.68,0.32,29.96,DI18
+690.00,29.10,0.50,30.11,BR19
+695.90,29.50,0.33,30.21,DI18

@@ -1,0 +1,38 @@
+# nu_mu N -> mu- N' pi on a nucleon at rest, with a cut on W(pi N).
+# Placeholders are filled by sherpa_scan.py.
+EVENTS: 100
+EVENT_GENERATION_MODE: Weighted
+INIT_ONLY: 3
+ME_GENERATORS: Comix
+CORE_SCALE: VAR{Abs2(p[0]+p[1])}
+SCALES: VAR{Abs2(p[0]+p[1])}
+
+MODEL: ChiPT_UFO
+UFO_PARAM_CARD: $param_card
+
+MI_HANDLER: None
+FRAGMENTATION: None
+BEAM_REMNANTS: False
+BEAMMODE: Fixed_Target
+SHOWER_GENERATOR: None
+PDF_SET: None
+MPI_PDF_SET: None
+
+INTEGRATION_ERROR: 10
+PSI:
+  NOPT: 2
+RANDOM_SEED: $seed
+
+PARTICLE_DATA:
+  13: {Massive: true}
+
+# Sherpa requires the neutrino first.
+BEAMS: [14, $nucleon]
+BEAM_ENERGIES: [$energy, $mass]
+
+PROCESSES:
+- $process:
+    Order: {QCD: Any, QED: Any}
+
+SELECTORS:
+  - [Mass, $hadron1, $hadron2, 0.0, $wcut]

@@ -1,0 +1,31 @@
+# gamma N -> pi N.  Placeholders are filled by sherpa_scan.py.
+EVENTS: 100
+EVENT_GENERATION_MODE: Weighted
+INIT_ONLY: 3
+ME_GENERATORS: Comix
+CORE_SCALE: VAR{Abs2(p[0]+p[1])}
+SCALES: VAR{Abs2(p[0]+p[1])}
+
+MODEL: ChiPT_UFO
+UFO_PARAM_CARD: $param_card
+
+MI_HANDLER: None
+FRAGMENTATION: None
+BEAM_REMNANTS: False
+BEAMMODE: Fixed_Target
+SHOWER_GENERATOR: None
+# The nucleon is an elementary beam particle; MPI_PDF_SET is needed as well,
+# otherwise a neutron beam finds no default PDF.
+PDF_SET: None
+MPI_PDF_SET: None
+
+INTEGRATION_ERROR: 10
+PSI:
+  NOPT: 8          # phase-space optimisation converged to 0.01% on the Delta peak
+
+BEAMS: [$nucleon, 22]
+BEAM_ENERGIES: [$mass, $energy]
+
+PROCESSES:
+- $process:
+    Order: {QCD: Any, QED: Any}
