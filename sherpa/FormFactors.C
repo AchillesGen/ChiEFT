@@ -1,14 +1,14 @@
-// FormFactors.C -- Sherpa form factor plugin for the ChiPT UFO model.
+// FormFactors.C -- Sherpa form factor plugin for the ChiEFT UFO model.
 //
 // Sherpa-generate-model does not write this file.  Copy it into
-// ChiPT_UFO/.sherpa/ and register it in .sherpa/CMakeLists.txt, which
+// ChiEFT_UFO/.sherpa/ and register it in .sherpa/CMakeLists.txt, which
 // sherpa/build_model.sh does.
 //
 // Each UFO form factor calls one of the functions below with
 //   arg = Q^2 = -q^2 of the gauge boson      (all except FDeltaLam)
 //   arg = p^2 of the Delta leg               (FDeltaLam)
 //
-// All coefficients are read from block CHIPTFF of the param card, so they can
+// All coefficients are read from block CHIEFTFF of the param card, so they can
 // be changed without recompiling.  Values are cached on first use: start a new
 // run after editing the card.  Do not compile with -ffast-math (the per-call
 // cache uses a NaN sentinel).
@@ -44,7 +44,7 @@ namespace {
       const auto &c = MODEL::s_model->ScalarConstants();
       auto it = c.find(name);
       if (it == c.end() || it->second == 0.0)
-        THROW(fatal_error, "CHIPTFF parameter '" + name + "' missing or zero "
+        THROW(fatal_error, "CHIEFTFF parameter '" + name + "' missing or zero "
               "in the param card.");
       return it->second;
     }

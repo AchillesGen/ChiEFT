@@ -1,5 +1,5 @@
 # Inclusive e-12C at 961 MeV, 37.5 deg (Sealock:1989nx) -- QE peak and Delta region
-# well separated, so it probes the ChiPT pion-production vertex directly.
+# well separated, so it probes the ChiEFT pion-production vertex directly.
 #
 # NUISANCE's Durham samples accept |theta_e - theta_0| < Electron_NThetaBins *
 # Electron_ThetaWidth = 4 deg, so the generation cut below is that window with a
@@ -14,7 +14,7 @@ Main:
   RunDecays: False
 
 SherpaOptions:
-  MODEL: ChiPT_UFO
+  MODEL: ChiEFT_UFO
   UFO_PARAM_CARD: param_card.dat
   # The UFO has no eta or kaons; keep Sherpa's default entries stable so the
   # Achilles cascade does not look for their decays.

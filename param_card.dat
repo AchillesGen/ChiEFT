@@ -75,9 +75,9 @@ DECAY  250 2.495200 # G0 : WZ
 DECAY  251 2.085000 # G+ : WW 
 
 ###################################
-## INFORMATION FOR CHIPTDELTA
+## INFORMATION FOR CHIEFTDELTA
 ###################################
-Block CHIPTDELTA 
+Block CHIEFTDELTA 
     1 -1.000000e+00 # AD 
     2 1.000000e+00 # g1D 
     3 1.014278e-01 # GamNPi 
@@ -85,9 +85,9 @@ Block CHIPTDELTA
     5 3.982841e-01 # G2overG1 
 
 ###################################
-## INFORMATION FOR CHIPTFF
+## INFORMATION FOR CHIEFTFF
 ###################################
-Block CHIPTFF 
+Block CHIEFTFF 
     1 1.121000e+00 # LambdaFF 
     2 2.792847e+00 # MuP 
     3 -1.913043e+00 # MuN 
@@ -102,9 +102,9 @@ Block CHIPTFF
    12 1.000000e+00 # PPNorm 
 
 ###################################
-## INFORMATION FOR CHIPTKELLY
+## INFORMATION FOR CHIEFTKELLY
 ###################################
-Block CHIPTKELLY 
+Block CHIEFTKELLY 
     1 -2.400000e-01 # KEp1 
     2 1.098000e+01 # KEp2 
     3 1.282000e+01 # KEp3 
@@ -122,16 +122,16 @@ Block CHIPTKELLY
    15 8.410000e+01 # KMn4 
 
 ###################################
-## INFORMATION FOR CHIPTPION
+## INFORMATION FOR CHIEFTPION
 ###################################
-Block CHIPTPION 
+Block CHIEFTPION 
     1 9.300000e-02 # fPi 
     2 1.275400e+00 # ga 
 
 ###################################
-## INFORMATION FOR CHIPTZEXP
+## INFORMATION FOR CHIEFTZEXP
 ###################################
-Block CHIPTZEXP 
+Block CHIEFTZEXP 
     1 -7.580156e-01 # AxA0 
     2 2.300000e+00 # AxA1 
     3 -6.000000e-01 # AxA2 

@@ -23,7 +23,7 @@ AD = Parameter(name = 'AD',
                type = 'real',
                value = -1,
                texname = '\\text{AD}',
-               lhablock = 'CHIPTDELTA',
+               lhablock = 'CHIEFTDELTA',
                lhacode = [ 1 ])
 
 g1D = Parameter(name = 'g1D',
@@ -31,7 +31,7 @@ g1D = Parameter(name = 'g1D',
                 type = 'real',
                 value = 1,
                 texname = '\\text{g1D}',
-                lhablock = 'CHIPTDELTA',
+                lhablock = 'CHIEFTDELTA',
                 lhacode = [ 2 ])
 
 GamNPi = Parameter(name = 'GamNPi',
@@ -39,7 +39,7 @@ GamNPi = Parameter(name = 'GamNPi',
                    type = 'real',
                    value = 0.1014278,
                    texname = '\\text{GamNPi}',
-                   lhablock = 'CHIPTDELTA',
+                   lhablock = 'CHIEFTDELTA',
                    lhacode = [ 3 ])
 
 GamNGam = Parameter(name = 'GamNGam',
@@ -47,7 +47,7 @@ GamNGam = Parameter(name = 'GamNGam',
                     type = 'real',
                     value = 0.0005722,
                     texname = '\\text{GamNGam}',
-                    lhablock = 'CHIPTDELTA',
+                    lhablock = 'CHIEFTDELTA',
                     lhacode = [ 4 ])
 
 G2overG1 = Parameter(name = 'G2overG1',
@@ -55,7 +55,7 @@ G2overG1 = Parameter(name = 'G2overG1',
                      type = 'real',
                      value = 0.3982841,
                      texname = '\\text{G2overG1}',
-                     lhablock = 'CHIPTDELTA',
+                     lhablock = 'CHIEFTDELTA',
                      lhacode = [ 5 ])
 
 LambdaFF = Parameter(name = 'LambdaFF',
@@ -63,7 +63,7 @@ LambdaFF = Parameter(name = 'LambdaFF',
                      type = 'real',
                      value = 1.121,
                      texname = '\\text{LambdaFF}',
-                     lhablock = 'CHIPTFF',
+                     lhablock = 'CHIEFTFF',
                      lhacode = [ 1 ])
 
 MuP = Parameter(name = 'MuP',
@@ -71,7 +71,7 @@ MuP = Parameter(name = 'MuP',
                 type = 'real',
                 value = 2.792847,
                 texname = '\\text{MuP}',
-                lhablock = 'CHIPTFF',
+                lhablock = 'CHIEFTFF',
                 lhacode = [ 2 ])
 
 MuN = Parameter(name = 'MuN',
@@ -79,7 +79,7 @@ MuN = Parameter(name = 'MuN',
                 type = 'real',
                 value = -1.913043,
                 texname = '\\text{MuN}',
-                lhablock = 'CHIPTFF',
+                lhablock = 'CHIEFTFF',
                 lhacode = [ 3 ])
 
 AxTcut = Parameter(name = 'AxTcut',
@@ -87,7 +87,7 @@ AxTcut = Parameter(name = 'AxTcut',
                    type = 'real',
                    value = 0.1753180641,
                    texname = '\\text{AxTcut}',
-                   lhablock = 'CHIPTFF',
+                   lhablock = 'CHIEFTFF',
                    lhacode = [ 4 ])
 
 AxT0 = Parameter(name = 'AxT0',
@@ -95,7 +95,7 @@ AxT0 = Parameter(name = 'AxT0',
                  type = 'real',
                  value = -0.28,
                  texname = '\\text{AxT0}',
-                 lhablock = 'CHIPTFF',
+                 lhablock = 'CHIEFTFF',
                  lhacode = [ 5 ])
 
 MADeltaSq = Parameter(name = 'MADeltaSq',
@@ -103,7 +103,7 @@ MADeltaSq = Parameter(name = 'MADeltaSq',
                       type = 'real',
                       value = 1.1025,
                       texname = '\\text{MADeltaSq}',
-                      lhablock = 'CHIPTFF',
+                      lhablock = 'CHIEFTFF',
                       lhacode = [ 6 ])
 
 CA5Norm = Parameter(name = 'CA5Norm',
@@ -111,7 +111,7 @@ CA5Norm = Parameter(name = 'CA5Norm',
                     type = 'real',
                     value = 0.,
                     texname = '\\text{CA5Norm}',
-                    lhablock = 'CHIPTFF',
+                    lhablock = 'CHIEFTFF',
                     lhacode = [ 7 ])
 
 Sw2FF = Parameter(name = 'Sw2FF',
@@ -119,7 +119,7 @@ Sw2FF = Parameter(name = 'Sw2FF',
                   type = 'real',
                   value = 0.23863,
                   texname = '\\text{Sw2FF}',
-                  lhablock = 'CHIPTFF',
+                  lhablock = 'CHIEFTFF',
                   lhacode = [ 8 ])
 
 C4AHat = Parameter(name = 'C4AHat',
@@ -127,7 +127,7 @@ C4AHat = Parameter(name = 'C4AHat',
                    type = 'real',
                    value = 0.,
                    texname = '\\text{C4AHat}',
-                   lhablock = 'CHIPTFF',
+                   lhablock = 'CHIEFTFF',
                    lhacode = [ 9 ])
 
 MRhoCT = Parameter(name = 'MRhoCT',
@@ -135,7 +135,7 @@ MRhoCT = Parameter(name = 'MRhoCT',
                    type = 'real',
                    value = 0.7758,
                    texname = '\\text{MRhoCT}',
-                   lhablock = 'CHIPTFF',
+                   lhablock = 'CHIEFTFF',
                    lhacode = [ 10 ])
 
 MV2ND = Parameter(name = 'MV2ND',
@@ -143,7 +143,7 @@ MV2ND = Parameter(name = 'MV2ND',
                   type = 'real',
                   value = 0.71,
                   texname = '\\text{MV2ND}',
-                  lhablock = 'CHIPTFF',
+                  lhablock = 'CHIEFTFF',
                   lhacode = [ 11 ])
 
 PPNorm = Parameter(name = 'PPNorm',
@@ -151,7 +151,7 @@ PPNorm = Parameter(name = 'PPNorm',
                    type = 'real',
                    value = 1.,
                    texname = '\\text{PPNorm}',
-                   lhablock = 'CHIPTFF',
+                   lhablock = 'CHIEFTFF',
                    lhacode = [ 12 ])
 
 KEp1 = Parameter(name = 'KEp1',
@@ -159,7 +159,7 @@ KEp1 = Parameter(name = 'KEp1',
                  type = 'real',
                  value = -0.24,
                  texname = '\\text{KEp1}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 1 ])
 
 KEp2 = Parameter(name = 'KEp2',
@@ -167,7 +167,7 @@ KEp2 = Parameter(name = 'KEp2',
                  type = 'real',
                  value = 10.98,
                  texname = '\\text{KEp2}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 2 ])
 
 KEp3 = Parameter(name = 'KEp3',
@@ -175,7 +175,7 @@ KEp3 = Parameter(name = 'KEp3',
                  type = 'real',
                  value = 12.82,
                  texname = '\\text{KEp3}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 3 ])
 
 KEp4 = Parameter(name = 'KEp4',
@@ -183,7 +183,7 @@ KEp4 = Parameter(name = 'KEp4',
                  type = 'real',
                  value = 21.97,
                  texname = '\\text{KEp4}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 4 ])
 
 KEn1 = Parameter(name = 'KEn1',
@@ -191,7 +191,7 @@ KEn1 = Parameter(name = 'KEn1',
                  type = 'real',
                  value = 1.7,
                  texname = '\\text{KEn1}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 5 ])
 
 KEn2 = Parameter(name = 'KEn2',
@@ -199,7 +199,7 @@ KEn2 = Parameter(name = 'KEn2',
                  type = 'real',
                  value = 3.3,
                  texname = '\\text{KEn2}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 6 ])
 
 KLamSq = Parameter(name = 'KLamSq',
@@ -207,7 +207,7 @@ KLamSq = Parameter(name = 'KLamSq',
                    type = 'real',
                    value = 0.7174,
                    texname = '\\text{KLamSq}',
-                   lhablock = 'CHIPTKELLY',
+                   lhablock = 'CHIEFTKELLY',
                    lhacode = [ 7 ])
 
 KMp1 = Parameter(name = 'KMp1',
@@ -215,7 +215,7 @@ KMp1 = Parameter(name = 'KMp1',
                  type = 'real',
                  value = 0.12,
                  texname = '\\text{KMp1}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 8 ])
 
 KMp2 = Parameter(name = 'KMp2',
@@ -223,7 +223,7 @@ KMp2 = Parameter(name = 'KMp2',
                  type = 'real',
                  value = 10.97,
                  texname = '\\text{KMp2}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 9 ])
 
 KMp3 = Parameter(name = 'KMp3',
@@ -231,7 +231,7 @@ KMp3 = Parameter(name = 'KMp3',
                  type = 'real',
                  value = 18.86,
                  texname = '\\text{KMp3}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 10 ])
 
 KMp4 = Parameter(name = 'KMp4',
@@ -239,7 +239,7 @@ KMp4 = Parameter(name = 'KMp4',
                  type = 'real',
                  value = 6.55,
                  texname = '\\text{KMp4}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 11 ])
 
 KMn1 = Parameter(name = 'KMn1',
@@ -247,7 +247,7 @@ KMn1 = Parameter(name = 'KMn1',
                  type = 'real',
                  value = 2.33,
                  texname = '\\text{KMn1}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 12 ])
 
 KMn2 = Parameter(name = 'KMn2',
@@ -255,7 +255,7 @@ KMn2 = Parameter(name = 'KMn2',
                  type = 'real',
                  value = 14.72,
                  texname = '\\text{KMn2}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 13 ])
 
 KMn3 = Parameter(name = 'KMn3',
@@ -263,7 +263,7 @@ KMn3 = Parameter(name = 'KMn3',
                  type = 'real',
                  value = 24.2,
                  texname = '\\text{KMn3}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 14 ])
 
 KMn4 = Parameter(name = 'KMn4',
@@ -271,7 +271,7 @@ KMn4 = Parameter(name = 'KMn4',
                  type = 'real',
                  value = 84.1,
                  texname = '\\text{KMn4}',
-                 lhablock = 'CHIPTKELLY',
+                 lhablock = 'CHIEFTKELLY',
                  lhacode = [ 15 ])
 
 fPi = Parameter(name = 'fPi',
@@ -279,7 +279,7 @@ fPi = Parameter(name = 'fPi',
                 type = 'real',
                 value = 0.093,
                 texname = '\\text{fPi}',
-                lhablock = 'CHIPTPION',
+                lhablock = 'CHIEFTPION',
                 lhacode = [ 1 ])
 
 ga = Parameter(name = 'ga',
@@ -287,7 +287,7 @@ ga = Parameter(name = 'ga',
                type = 'real',
                value = 1.2754,
                texname = '\\text{ga}',
-               lhablock = 'CHIPTPION',
+               lhablock = 'CHIEFTPION',
                lhacode = [ 2 ])
 
 AxA0 = Parameter(name = 'AxA0',
@@ -295,7 +295,7 @@ AxA0 = Parameter(name = 'AxA0',
                  type = 'real',
                  value = -0.7580156,
                  texname = '\\text{AxA0}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 1 ])
 
 AxA1 = Parameter(name = 'AxA1',
@@ -303,7 +303,7 @@ AxA1 = Parameter(name = 'AxA1',
                  type = 'real',
                  value = 2.3,
                  texname = '\\text{AxA1}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 2 ])
 
 AxA2 = Parameter(name = 'AxA2',
@@ -311,7 +311,7 @@ AxA2 = Parameter(name = 'AxA2',
                  type = 'real',
                  value = -0.6,
                  texname = '\\text{AxA2}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 3 ])
 
 AxA3 = Parameter(name = 'AxA3',
@@ -319,7 +319,7 @@ AxA3 = Parameter(name = 'AxA3',
                  type = 'real',
                  value = -3.8,
                  texname = '\\text{AxA3}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 4 ])
 
 AxA4 = Parameter(name = 'AxA4',
@@ -327,7 +327,7 @@ AxA4 = Parameter(name = 'AxA4',
                  type = 'real',
                  value = 2.3,
                  texname = '\\text{AxA4}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 5 ])
 
 AxA5 = Parameter(name = 'AxA5',
@@ -335,7 +335,7 @@ AxA5 = Parameter(name = 'AxA5',
                  type = 'real',
                  value = 2.16,
                  texname = '\\text{AxA5}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 6 ])
 
 AxA6 = Parameter(name = 'AxA6',
@@ -343,7 +343,7 @@ AxA6 = Parameter(name = 'AxA6',
                  type = 'real',
                  value = -0.896,
                  texname = '\\text{AxA6}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 7 ])
 
 AxA7 = Parameter(name = 'AxA7',
@@ -351,7 +351,7 @@ AxA7 = Parameter(name = 'AxA7',
                  type = 'real',
                  value = -1.58,
                  texname = '\\text{AxA7}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 8 ])
 
 AxA8 = Parameter(name = 'AxA8',
@@ -359,7 +359,7 @@ AxA8 = Parameter(name = 'AxA8',
                  type = 'real',
                  value = 0.823,
                  texname = '\\text{AxA8}',
-                 lhablock = 'CHIPTZEXP',
+                 lhablock = 'CHIEFTZEXP',
                  lhacode = [ 9 ])
 
 cabi = Parameter(name = 'cabi',

@@ -1,4 +1,4 @@
-# Example Sherpa run card for the ChiPT UFO model.
+# Example Sherpa run card for the ChiEFT UFO model.
 # Template only: set BEAMS, BEAM_ENERGIES and PROCESSES for your study.
 
 # general settings
@@ -10,7 +10,7 @@ ME_GENERATORS: Comix
 CORE_SCALE: VAR{Abs2(p[0]+p[1])}
 
 # model: the UFO directory and its param card (paths relative to the run dir)
-MODEL: ChiPT_UFO
+MODEL: ChiEFT_UFO
 UFO_PARAM_CARD: param_card.dat
 
 # Uncomment to switch off underlying event, hadronization or shower:

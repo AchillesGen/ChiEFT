@@ -1,4 +1,4 @@
-"""Semi-analytic evaluation of the ChiPT UFO, for the paper's figures.
+"""Semi-analytic evaluation of the ChiEFT UFO, for the paper's figures.
 
 Every vertex, coupling and parameter is read from the UFO (and its param card);
 this package only adds what a UFO does not contain: propagators, spinors and
@@ -16,5 +16,5 @@ import os
 
 PAPER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(PAPER)
-UFO = os.path.join(REPO, "ChiPT_UFO")
+UFO = os.path.join(REPO, "ChiEFT_UFO")
 PARAM_CARD = os.path.join(REPO, "param_card.dat")

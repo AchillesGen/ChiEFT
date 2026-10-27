@@ -1,7 +1,7 @@
 # Reproducing the paper figures
 
-Everything needed to regenerate the figures of the ChiPT paper from the model in
-this repository (`../ChiPT_UFO`, `../param_card.dat`). Generated files go to
+Everything needed to regenerate the figures of the ChiEFT paper from the model in
+this repository (`../ChiEFT_UFO`, `../param_card.dat`). Generated files go to
 `figures/` and `figures_appendix/`, with the same file names as in the paper.
 
 | Figure | Script | Inputs |
@@ -36,7 +36,7 @@ make figures
 Each step writes its results to disk and later steps read them. `make figures`
 draws whatever its inputs allow.
 
-1. **`free_nucleon/tables.py`** evaluates the UFO directly (package `chipt/`).
+1. **`free_nucleon/tables.py`** evaluates the UFO directly (package `chieft/`).
    It covers what Sherpa cannot do: the running Δ width, ρ/ω exchange, and the
    Δ-only line shape. It needs Python only (numpy, matplotlib, pyyaml) and runs
    in parallel on half the cores (`--jobs` to change), one BLAS thread per
@@ -56,7 +56,7 @@ draws whatever its inputs allow.
    `nuclear/patches/`. The running-width prediction reweights each CC 1π, NC 1π
    and e 1π hard process with the step-1 tables (`nuclear/running_width.py`).
 
-Both generators must load the Sherpa model built from `../ChiPT_UFO` with the
+Both generators must load the Sherpa model built from `../ChiEFT_UFO` with the
 form-factor plugin (top-level README). Both read `../param_card.dat`, which has
 C4AHat = 0 as in the paper.
 
@@ -64,7 +64,7 @@ C4AHat = 0 as in the paper.
 
 | Component | Version |
 |---|---|
-| FeynRules | 2.3.49 + `../feynrules/feynrules-2.3.49-chipt.patch`, Mathematica 14.3 |
+| FeynRules | 2.3.49 + `../feynrules/feynrules-2.3.49-chieft.patch`, Mathematica 14.3 |
 | Sherpa | `570-update-achilles-interface` branch, commit 1cd6f079f |
 | Achilles | `sherpa3-0` branch, commit ff313b48 |
 | NUISANCE | NUISANCE2 f5f79db6 + `nuclear/patches/`, in `ghcr.io/achillesgen/achilles-physval@sha256:5e1d35ea…` (see `nuclear/docker/Dockerfile`) |

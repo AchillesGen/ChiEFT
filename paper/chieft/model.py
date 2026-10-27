@@ -1,4 +1,4 @@
-"""The ChiPT model as the semi-analytic code evaluates it.
+"""The ChiEFT model as the semi-analytic code evaluates it.
 
 Two parametrisations of the Delta(1232):
 

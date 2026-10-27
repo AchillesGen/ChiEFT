@@ -1,7 +1,7 @@
 """The form factors of sherpa/FormFactors.C, evaluated from the same param card.
 
-Vector: Kelly fit (block CHIPTKELLY).  Axial: z-expansion (CHIPTZEXP, with
-t_cut and t_0 in CHIPTFF).  Most functions are ratios normalised to 1 at
+Vector: Kelly fit (block CHIEFTKELLY).  Axial: z-expansion (CHIEFTZEXP, with
+t_cut and t_0 in CHIEFTFF).  Most functions are ratios normalised to 1 at
 Q^2 = 0, so the model keeps its own couplings (g_A, C5A = sqrt(2/3) h_D) and
 only acquires the Q^2 shape.  The exceptions are the weak-magnetism terms
 FW2, FZ2p, FZ2n, which carry absolute normalisation from CVC, and FZ1p, which

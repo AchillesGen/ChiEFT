@@ -1,9 +1,9 @@
-ChiPT changes to FeynRules 2.3.49 (https://github.com/FeynRules/FeynRules), GPL-3.0.
+ChiEFT changes to FeynRules 2.3.49 (https://github.com/FeynRules/FeynRules), GPL-3.0.
 Modified by J. Isaacson <isaacs21@msu.edu>, October 2026:
   - Mathematica 14 compatibility (Commutator, MatrixSymbol)
   - Python 3 UFO writer
   - form factors written into Lorentz structures (UFO 2.0) instead of couplings
-Apply to a fresh FeynRules 2.3.49 with: patch -p1 < feynrules-2.3.49-chipt.patch
+Apply to a fresh FeynRules 2.3.49 with: patch -p1 < feynrules-2.3.49-chieft.patch
 
 diff -ruN a/Core/ClassDeclarations.m b/Core/ClassDeclarations.m
 --- a/Core/ClassDeclarations.m	2026-10-19 06:25:28.687788881 -0400

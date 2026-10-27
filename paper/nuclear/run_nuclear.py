@@ -4,12 +4,12 @@
     python3 run_nuclear.py generate [--experiment NAME ...] [--events N] [--jobs J]
         Achilles events, one file per experiment of analyses.yml
         -> work/events/<experiment>.hepmc.gz.  Needs $ACHILLES_BUILD (an Achilles
-        build with bin/achilles and data/) and the ChiPT_UFO Sherpa model.
+        build with bin/achilles and data/) and the ChiEFT_UFO Sherpa model.
 
     python3 run_nuclear.py analyze [--experiment NAME ...] [--docker]
         Bins the events with NUISANCE, nominal and with the running-width weights,
         -> results/<sample>.json.  Needs pyNUISANCE; --docker runs this stage in
-        the achilles-physval:chipt image (docker/Dockerfile).
+        the achilles-physval:chieft image (docker/Dockerfile).
 """
 import argparse
 import json
@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 WORK = os.path.join(HERE, "work")
 RESULTS = os.path.join(HERE, "results")
-IMAGE = "achilles-physval:chipt"
+IMAGE = "achilles-physval:chieft"
 
 
 class _Include(str):

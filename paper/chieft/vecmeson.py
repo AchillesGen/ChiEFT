@@ -1,6 +1,6 @@
 """t-channel rho/omega exchange in gamma N -> pi N (photoproduction).
 
-Not part of the ChiPT model: the couplings are the fit values of Fernandez-
+Not part of the ChiEFT model: the couplings are the fit values of Fernandez-
 Ramirez, Moya de Guerra and Udias, nucl-th/0509020, Eqs. (15)-(16).
 
     omega   G = 0.2804   F = 21.11          K = -0.17   m = 0.78257

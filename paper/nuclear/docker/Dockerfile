@@ -4,7 +4,7 @@
 # return empty predictions).
 #
 # Build from paper/nuclear:
-#   docker build -f docker/Dockerfile -t achilles-physval:chipt .
+#   docker build -f docker/Dockerfile -t achilles-physval:chieft .
 ARG BASE=ghcr.io/achillesgen/achilles-physval@sha256:5e1d35ea5c2f8f9af9b1c62cdfd04412a74ca4b7c8f7706b70f0e954f369aa60
 FROM ${BASE}
 

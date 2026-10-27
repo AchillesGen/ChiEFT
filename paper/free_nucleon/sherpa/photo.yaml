@@ -6,7 +6,7 @@ ME_GENERATORS: Comix
 CORE_SCALE: VAR{Abs2(p[0]+p[1])}
 SCALES: VAR{Abs2(p[0]+p[1])}
 
-MODEL: ChiPT_UFO
+MODEL: ChiEFT_UFO
 UFO_PARAM_CARD: $param_card
 
 MI_HANDLER: None

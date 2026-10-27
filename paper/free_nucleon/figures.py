@@ -19,7 +19,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from chipt import style as ps  # noqa: E402
+from chieft import style as ps  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
 OUT = os.path.join(HERE, "output")

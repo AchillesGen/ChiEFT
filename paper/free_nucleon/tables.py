@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Semi-analytic tables from the ChiPT UFO (package ../chipt), for what Sherpa
+"""Semi-analytic tables from the ChiEFT UFO (package ../chieft), for what Sherpa
 cannot do: the running Delta width and the rho/omega exchange.
 
     python3 tables.py photo      photoproduction variants        -> output/photo_curves.csv
@@ -45,7 +45,7 @@ import numpy as np  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from chipt import model, photo, weak  # noqa: E402
+from chieft import model, photo, weak  # noqa: E402
 
 OUT = os.path.join(HERE, "output")
 _models = {}

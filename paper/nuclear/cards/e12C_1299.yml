@@ -13,7 +13,7 @@ Main:
   RunDecays: False
 
 SherpaOptions:
-  MODEL: ChiPT_UFO
+  MODEL: ChiEFT_UFO
   UFO_PARAM_CARD: param_card.dat
   # The UFO has no eta or kaons; keep Sherpa's default entries stable so the
   # Achilles cascade does not look for their decays.

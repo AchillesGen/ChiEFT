@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Free-nucleon cross sections from Sherpa with the ChiPT UFO (constant Delta width).
+"""Free-nucleon cross sections from Sherpa with the ChiEFT UFO (constant Delta width).
 
     python3 sherpa_scan.py photo     gamma N -> pi N, 4 channels      -> output/sherpa_photo.csv
     python3 sherpa_scan.py cc        nu_mu N -> mu- N' pi, W < 1.4 GeV -> output/sherpa_cc.csv
 
-Needs the ChiPT_UFO Sherpa model built and installed (see the top-level
+Needs the ChiEFT_UFO Sherpa model built and installed (see the top-level
 README).  The Sherpa executable is taken from $SHERPA, default `Sherpa`.
 Each point runs in its own directory under output/sherpa_runs/.  Points
 already in the csv are skipped, so an interrupted scan can be resumed.
@@ -23,7 +23,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from chipt import PARAM_CARD  # noqa: E402
+from chieft import PARAM_CARD  # noqa: E402
 
 OUT = os.path.join(HERE, "output")
 SHERPA = os.environ.get("SHERPA", "Sherpa")

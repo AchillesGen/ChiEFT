@@ -1,5 +1,5 @@
 (* ****************************************************************************** *)
-(*  ChiPT.fr -- chiral pion / nucleon / Delta(1232) model for FeynRules            *)
+(*  ChiEFT.fr -- chiral pion / nucleon / Delta(1232) model for FeynRules          *)
 (*                                                                                *)
 (*  Pions, nucleons and the Delta(1232) coupled to the photon, W and Z through    *)
 (*  one chiral covariant derivative, so electromagnetic and weak currents come    *)
@@ -8,10 +8,10 @@
 (*  and Udias, nucl-th/0509020.                                                   *)
 (*                                                                                *)
 (*  Use with FeynRules (see ExportUFO.nb):                                        *)
-(*      LoadModel["ChiPT.fr"];                                                    *)
-(*      ChiPTClearCache[];        (* required, see "Cache control" below *)       *)
+(*      LoadModel["ChiEFT.fr"];                                                   *)
+(*      ChiEFTClearCache[];        (* required, see "Cache control" below *)      *)
 (*      WriteUFO[LTotal, AddDecays -> False, FlavorExpand -> True,                *)
-(*               Output -> "ChiPT_UFO", MaxParticles -> 4];                       *)
+(*               Output -> "ChiEFT_UFO", MaxParticles -> 4];                      *)
 (*                                                                                *)
 (*  Form factors are attached to the vertices as UFO form factors.  Their         *)
 (*  functions (F1p, FW1, FDeltaLam, ...) are supplied by the event generator,     *)
@@ -21,7 +21,7 @@
 (*  (Gasser-Leutwyler), see "Chiral building blocks" below.                       *)
 (* ****************************************************************************** *)
 
-M$ModelName = "ChiPT";
+M$ModelName = "ChiEFT";
 
 M$Information = {
   Authors      -> {"Z. Graham-Jones", "M. Hoppe", "J. Isaacson", "S. W. Li", "M. Toman"},
@@ -32,7 +32,7 @@ M$Information = {
   Emails       -> {"zara.m.graham-jones@durham.ac.uk", "mareen.hoppe@tu-dresden.de",
                    "isaacs21@msu.edu", "shirley.li@uci.edu", "mtoman@uci.edu"},
   References   -> {"C. Fernandez-Ramirez, E. Moya de Guerra, J. M. Udias, nucl-th/0509020",
-                   "Z. Graham-Jones et al., Phenomenological Chiral Perturbation Theory for Neutrino Event Generators, arXiv:<id>"}
+                   "Z. Graham-Jones et al., Phenomenological Chiral Effective Field Theory for Neutrino Event Generators, arXiv:<id>"}
 };
 
 FeynmanGauge = False;
@@ -695,7 +695,7 @@ M$Parameters = {
 
   fPi == {
     ParameterType -> External,
-    BlockName     -> CHIPTPION,
+    BlockName     -> CHIEFTPION,
     OrderBlock    -> 1,
     Value         -> 0.093,
     InteractionOrder -> {CHI, -1},
@@ -703,7 +703,7 @@ M$Parameters = {
   },
   ga == {
     ParameterType    -> External,
-    BlockName        -> CHIPTPION,
+    BlockName        -> CHIEFTPION,
     OrderBlock       -> 2,
     Value            -> 1.2754,
     InteractionOrder -> {QED, 0},
@@ -711,7 +711,7 @@ M$Parameters = {
   },
   AD == {
     ParameterType    -> External,
-    BlockName        -> CHIPTDELTA,
+    BlockName        -> CHIEFTDELTA,
     OrderBlock       -> 1,
     Value            -> -1,
     InteractionOrder -> {QED, 0},
@@ -719,7 +719,7 @@ M$Parameters = {
   },
   g1D == {
     ParameterType    -> External,
-    BlockName        -> CHIPTDELTA,
+    BlockName        -> CHIEFTDELTA,
     OrderBlock       -> 2,
     Value            -> 1,
     InteractionOrder -> {QED, 0},
@@ -728,7 +728,7 @@ M$Parameters = {
 
   GamNPi == {
     ParameterType    -> External,
-    BlockName        -> CHIPTDELTA,
+    BlockName        -> CHIEFTDELTA,
     OrderBlock       -> 3,
     Value            -> 0.1014278,
     InteractionOrder -> {QED, 0},
@@ -736,7 +736,7 @@ M$Parameters = {
   },
   GamNGam == {
     ParameterType    -> External,
-    BlockName        -> CHIPTDELTA,
+    BlockName        -> CHIEFTDELTA,
     OrderBlock       -> 4,
     Value            -> 0.0005722,
     InteractionOrder -> {QED, 0},
@@ -744,7 +744,7 @@ M$Parameters = {
   },
   G2overG1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTDELTA,
+    BlockName        -> CHIEFTDELTA,
     OrderBlock       -> 5,
     Value            -> 0.3982841,
     InteractionOrder -> {QED, 0},
@@ -752,18 +752,18 @@ M$Parameters = {
   },
   LambdaFF == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 1,
     Value            -> 1.121,
     InteractionOrder -> {QED, 0},
     Description      -> "Cutoff Lambda (GeV) of the Delta form factor FDeltaLam."
   },
 
-  (* Block CHIPTFF entries below are read by the generator's form factor
+  (* Block CHIEFTFF entries below are read by the generator's form factor
      plugin from the param card; they do not appear inside any vertex. *)
   MuP == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 2,
     Value            -> 2.792847,
     InteractionOrder -> {QED, 0},
@@ -771,13 +771,13 @@ M$Parameters = {
   },
   MuN == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 3,
     Value            -> -1.913043,
     InteractionOrder -> {QED, 0},
     Description      -> "Neutron magnetic moment.  Used by the form factor plugin."
   },
-  (* Kelly nucleon vector form factor fit, block CHIPTKELLY.  Read by the plugin:
+  (* Kelly nucleon vector form factor fit, block CHIEFTKELLY.  Read by the plugin:
         1-4   Gep: a1, b1, b2, b3          (KEp1 ... KEp4)
         5-7   Gen: A, B, lambda^2 [GeV^2]  (KEn1, KEn2, KLamSq)
         8-11  Gmp: a1, b1, b2, b3          (KMp1 ... KMp4)
@@ -786,7 +786,7 @@ M$Parameters = {
      parameter with Indices, and LoadModel then never returns. *)
   KEp1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 1,
     Value            -> -0.24,
     InteractionOrder -> {QED, 0},
@@ -794,7 +794,7 @@ M$Parameters = {
   },
   KEp2 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 2,
     Value            -> 10.98,
     InteractionOrder -> {QED, 0},
@@ -802,7 +802,7 @@ M$Parameters = {
   },
   KEp3 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 3,
     Value            -> 12.82,
     InteractionOrder -> {QED, 0},
@@ -810,7 +810,7 @@ M$Parameters = {
   },
   KEp4 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 4,
     Value            -> 21.97,
     InteractionOrder -> {QED, 0},
@@ -818,7 +818,7 @@ M$Parameters = {
   },
   KEn1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 5,
     Value            -> 1.7,
     InteractionOrder -> {QED, 0},
@@ -826,7 +826,7 @@ M$Parameters = {
   },
   KEn2 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 6,
     Value            -> 3.3,
     InteractionOrder -> {QED, 0},
@@ -834,7 +834,7 @@ M$Parameters = {
   },
   KLamSq == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 7,
     Value            -> 0.7174,
     InteractionOrder -> {QED, 0},
@@ -842,7 +842,7 @@ M$Parameters = {
   },
   KMp1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 8,
     Value            -> 0.12,
     InteractionOrder -> {QED, 0},
@@ -850,7 +850,7 @@ M$Parameters = {
   },
   KMp2 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 9,
     Value            -> 10.97,
     InteractionOrder -> {QED, 0},
@@ -858,7 +858,7 @@ M$Parameters = {
   },
   KMp3 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 10,
     Value            -> 18.86,
     InteractionOrder -> {QED, 0},
@@ -866,7 +866,7 @@ M$Parameters = {
   },
   KMp4 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 11,
     Value            -> 6.55,
     InteractionOrder -> {QED, 0},
@@ -874,7 +874,7 @@ M$Parameters = {
   },
   KMn1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 12,
     Value            -> 2.33,
     InteractionOrder -> {QED, 0},
@@ -882,7 +882,7 @@ M$Parameters = {
   },
   KMn2 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 13,
     Value            -> 14.72,
     InteractionOrder -> {QED, 0},
@@ -890,7 +890,7 @@ M$Parameters = {
   },
   KMn3 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 14,
     Value            -> 24.2,
     InteractionOrder -> {QED, 0},
@@ -898,7 +898,7 @@ M$Parameters = {
   },
   KMn4 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTKELLY,
+    BlockName        -> CHIEFTKELLY,
     OrderBlock       -> 15,
     Value            -> 84.1,
     InteractionOrder -> {QED, 0},
@@ -906,7 +906,7 @@ M$Parameters = {
   },
   AxTcut == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 4,
     Value            -> 0.1753180641,
     InteractionOrder -> {QED, 0},
@@ -914,18 +914,18 @@ M$Parameters = {
   },
   AxT0 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 5,
     Value            -> -0.28,
     InteractionOrder -> {QED, 0},
     Description      -> "axial z-expansion t_0, GeV^2."
   },
-  (* Axial z-expansion coefficients a_0 ... a_8, block CHIPTZEXP; entry k holds
+  (* Axial z-expansion coefficients a_0 ... a_8, block CHIEFTZEXP; entry k holds
      a_(k-1).  a_0 is fixed by F_A(0) = -g_A.  Scalars for the same reason as
      the Kelly coefficients above. *)
   AxA0 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 1,
     Value            -> -0.7580156,
     InteractionOrder -> {QED, 0},
@@ -933,7 +933,7 @@ M$Parameters = {
   },
   AxA1 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 2,
     Value            -> 2.3,
     InteractionOrder -> {QED, 0},
@@ -941,7 +941,7 @@ M$Parameters = {
   },
   AxA2 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 3,
     Value            -> -0.6,
     InteractionOrder -> {QED, 0},
@@ -949,7 +949,7 @@ M$Parameters = {
   },
   AxA3 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 4,
     Value            -> -3.8,
     InteractionOrder -> {QED, 0},
@@ -957,7 +957,7 @@ M$Parameters = {
   },
   AxA4 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 5,
     Value            -> 2.3,
     InteractionOrder -> {QED, 0},
@@ -965,7 +965,7 @@ M$Parameters = {
   },
   AxA5 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 6,
     Value            -> 2.16,
     InteractionOrder -> {QED, 0},
@@ -973,7 +973,7 @@ M$Parameters = {
   },
   AxA6 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 7,
     Value            -> -0.896,
     InteractionOrder -> {QED, 0},
@@ -981,7 +981,7 @@ M$Parameters = {
   },
   AxA7 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 8,
     Value            -> -1.58,
     InteractionOrder -> {QED, 0},
@@ -989,7 +989,7 @@ M$Parameters = {
   },
   AxA8 == {
     ParameterType    -> External,
-    BlockName        -> CHIPTZEXP,
+    BlockName        -> CHIEFTZEXP,
     OrderBlock       -> 9,
     Value            -> 0.823,
     InteractionOrder -> {QED, 0},
@@ -997,7 +997,7 @@ M$Parameters = {
   },
   MADeltaSq == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 6,
     Value            -> 1.1025,
     InteractionOrder -> {QED, 0},
@@ -1005,7 +1005,7 @@ M$Parameters = {
   },
   CA5Norm == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 7,
     Value            -> 0.0,
     InteractionOrder -> {QED, 0},
@@ -1013,7 +1013,7 @@ M$Parameters = {
   },
   Sw2FF == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 8,
     Value            -> 0.23863,
     InteractionOrder -> {QED, 0},
@@ -1021,7 +1021,7 @@ M$Parameters = {
   },
   C4AHat == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 9,
     Value            -> 0.,
     InteractionOrder -> {QED, 0},
@@ -1029,7 +1029,7 @@ M$Parameters = {
   },
   MRhoCT == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 10,
     Value            -> 0.7758,
     InteractionOrder -> {QED, 0},
@@ -1037,7 +1037,7 @@ M$Parameters = {
   },
   PPNorm == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 12,
     Value            -> 1.0,
     InteractionOrder -> {QED, 0},
@@ -1051,7 +1051,7 @@ M$Parameters = {
   },
   MV2ND == {
     ParameterType    -> External,
-    BlockName        -> CHIPTFF,
+    BlockName        -> CHIEFTFF,
     OrderBlock       -> 11,
     Value            -> 0.71,
     InteractionOrder -> {QED, 0},
@@ -1324,15 +1324,15 @@ RMatTilda[mu_] := RMatTilda[mu] = Expand[HC[umat] . RMat[mu] . umat];
    terms with form factors so the Ward identities still hold. *)
 LMatTildaV[mu_] := LMatTildaV[mu] = Expand[(1/2)*(LMatTilda[mu] + RMatTilda[mu])];
 LMatTildaA[mu_] := LMatTildaA[mu] = Expand[(1/2)*(RMatTilda[mu] - LMatTilda[mu])];
-ChiPTOnePion[m_]  := Map[Coefficient[Expand[#], fPi, -1]/fPi &, m, {2}];
+ChiEFTOnePion[m_]  := Map[Coefficient[Expand[#], fPi, -1]/fPi &, m, {2}];
 
 (* Pick out / remove the Z from a matrix; the Z gets its own form factor. *)
-ChiPTZOnly[m_, mu_] := Map[Coefficient[Expand[#], Z[Index[Lorentz, mu]]]*
+ChiEFTZOnly[m_, mu_] := Map[Coefficient[Expand[#], Z[Index[Lorentz, mu]]]*
                              Z[Index[Lorentz, mu]] &, m, {2}];
-ChiPTNoZ[m_, mu_]   := Map[Expand[#] - Coefficient[Expand[#], Z[Index[Lorentz, mu]]]*
+ChiEFTNoZ[m_, mu_]   := Map[Expand[#] - Coefficient[Expand[#], Z[Index[Lorentz, mu]]]*
                              Z[Index[Lorentz, mu]] &, m, {2}];
-SrcTildaV1[mu_]   := SrcTildaV1[mu] = ChiPTOnePion[LMatTildaV[mu]];
-SrcTildaA1[mu_]   := SrcTildaA1[mu] = ChiPTOnePion[LMatTildaA[mu]];
+SrcTildaV1[mu_]   := SrcTildaV1[mu] = ChiEFTOnePion[LMatTildaV[mu]];
+SrcTildaA1[mu_]   := SrcTildaA1[mu] = ChiEFTOnePion[LMatTildaA[mu]];
 
 (* Source-only part of D_mu U, used for the pion-in-flight vertex. *)
 DelUSrc[mu_] := ExpandIndices[-I*RMat[mu] . UMat + I*UMat . LMat[mu]];
@@ -1349,25 +1349,25 @@ ChiVielbeinVWeak[mu_, l_]   := ChiVielbeinVWeak[mu, l] = Normal[Series[(1/2)*Tr[
 ChiVielbeinVPion[mu_, l_]   := ChiVielbeinVPion[mu, l] = ChiVielbeinV[mu, l] - ChiVielbeinVWeak[mu, l];
 
 (* ****************************************************************************** *)
-(*  Cache control.  CALL ChiPTClearCache[] RIGHT AFTER LoadModel.                  *)
+(*  Cache control.  CALL ChiEFTClearCache[] RIGHT AFTER LoadModel.                  *)
 (*  The helpers above are memoised for speed, but LoadModel evaluates some of     *)
 (*  them before the model is fully set up and caches wrong results              *)
 (*  (Derivative[..][HC] junk in every pi-N-Delta vertex).  This clears them.     *)
 (* ****************************************************************************** *)
-SetAttributes[ChiPTPurge, HoldAll];
-ChiPTPurge[s_Symbol] := DownValues[s] =
+SetAttributes[ChiEFTPurge, HoldAll];
+ChiEFTPurge[s_Symbol] := DownValues[s] =
    Select[DownValues[s], !FreeQ[First[#], Pattern] &];
 
-ChiPTClearCache[] := (
-  ChiPTPurge[ChiConnect];   ChiPTPurge[ChiVielbein];  ChiPTPurge[ChiVielbein2];
-  ChiPTPurge[ChiConnectV];  ChiPTPurge[ChiVielbeinV];
-  ChiPTPurge[ChiVielbeinVWeak]; ChiPTPurge[ChiVielbeinVPion];
-  ChiPTPurge[aVec];         ChiPTPurge[vVec];
-  ChiPTPurge[LMatTilda];    ChiPTPurge[RMatTilda];
-  ChiPTPurge[LMatTildaV];   ChiPTPurge[LMatTildaA];
-  ChiPTPurge[SrcTildaV1];   ChiPTPurge[SrcTildaA1];
-  ChiPTPurge[PiPoleSrc];    ChiPTPurge[PiPole];
-  "ChiPT: load-time caches purged");
+ChiEFTClearCache[] := (
+  ChiEFTPurge[ChiConnect];   ChiEFTPurge[ChiVielbein];  ChiEFTPurge[ChiVielbein2];
+  ChiEFTPurge[ChiConnectV];  ChiEFTPurge[ChiVielbeinV];
+  ChiEFTPurge[ChiVielbeinVWeak]; ChiEFTPurge[ChiVielbeinVPion];
+  ChiEFTPurge[aVec];         ChiEFTPurge[vVec];
+  ChiEFTPurge[LMatTilda];    ChiEFTPurge[RMatTilda];
+  ChiEFTPurge[LMatTildaV];   ChiEFTPurge[LMatTildaA];
+  ChiEFTPurge[SrcTildaV1];   ChiEFTPurge[SrcTildaA1];
+  ChiEFTPurge[PiPoleSrc];    ChiEFTPurge[PiPole];
+  "ChiEFT: load-time caches purged");
 
 (* Isovector vector source, normalised so component 3 contains the photon with
    coefficient 1.  Used to give the W and Z the CVC vector N -> Delta coupling. *)
@@ -1547,29 +1547,29 @@ LNNCTFF := Module[{wt, krA, krZ},
        Inner[Dot, SrcTildaV1[mu], Nucleons[s2]]]]];
   krA = Block[{mu, s1, s2, s3}, Inner[Dot, Nucleonsbar[s1],
      Inner[Dot, Ga[mu, s1, s2]*IdentityMatrix[2],
-       Inner[Dot, ChiPTNoZ[SrcTildaA1[mu], mu],
+       Inner[Dot, ChiEFTNoZ[SrcTildaA1[mu], mu],
          Inner[Dot, Ga[5, s2, s3]*IdentityMatrix[2], Nucleons[s3]]]]]];
   krZ = Block[{mu, s1, s2, s3}, Inner[Dot, Nucleonsbar[s1],
      Inner[Dot, Ga[mu, s1, s2]*IdentityMatrix[2],
-       Inner[Dot, ChiPTZOnly[SrcTildaA1[mu], mu],
+       Inner[Dot, ChiEFTZOnly[SrcTildaA1[mu], mu],
          Inner[Dot, Ga[5, s2, s3]*IdentityMatrix[2], Nucleons[s3]]]]]];
   (FFRHOCT - 1)*wt + ga*(FFW1CT - 1)*krA + ga*(FFZ1CT - 1)*krZ];
 
 (* Form factors on the pion-in-flight (boson-pi-pi) vertices. *)
-ChiPTPFCross[src_] := Normal[Series[
+ChiEFTPFCross[src_] := Normal[Series[
    Block[{mu}, ExpandIndices[(1/4)*fPi^2*
       Tr[src[mu] . HC[del[UMat, mu]] + del[UMat, mu] . HC[src[mu]]]]],
    {fPi, Infinity, fPiOrder}]];
 
-DelUSrcNoZ[mu_] := ChiPTNoZ[DelUSrc[mu], mu];
-DelUSrcZ[mu_]   := ChiPTZOnly[DelUSrc[mu], mu];
+DelUSrcNoZ[mu_] := ChiEFTNoZ[DelUSrc[mu], mu];
+DelUSrcZ[mu_]   := ChiEFTZOnly[DelUSrc[mu], mu];
 
 (* Assign the pieces to variables before summing: written as one inline sum,
    FeynRules silently drops part of it.  Same for LPPoleFF, LDeltaSector
-   and LChiPT below. *)
+   and LChiEFT below. *)
 LPFFF := Module[{a, b},
-  a = ChiPTPFCross[DelUSrcNoZ];
-  b = ChiPTPFCross[DelUSrcZ];
+  a = ChiEFTPFCross[DelUSrcNoZ];
+  b = ChiEFTPFCross[DelUSrcZ];
   (FFW1PF - 1)*a + (FFZ1PF - 1)*b];
 
 (* Pion-pole diagram (boson -> virtual pion -> pi N N).  The UFO has no
@@ -1583,7 +1583,7 @@ PiPoleSrc[a_] := PiPoleSrc[a] = Block[{nu},
 PiPole[a_] := PiPole[a] =
    -(fPi/2)*If[a === 3, FFPPPIZ, FFPPPIW]*PiPoleSrc[a];
 
-(* Not memoised on purpose (ChiPTClearCache only clears DownValues). *)
+(* Not memoised on purpose (ChiEFTClearCache only clears DownValues). *)
 PionMat    := ExpandIndices[Sum[PauliMatrix[a]*Pion[a], {a, 1, 3}]];
 PiPoleMat  := ExpandIndices[Sum[PauliMatrix[a]*PiPole[a], {a, 1, 3}]];
 
@@ -1679,7 +1679,7 @@ LWeakNDeltaV := Kappa*Block[{s1, s2, mu, nu},
     {r1, 1, 2}, {i1, 1, 3}]]];
 
 (* ----------------------------------------------------------------- totals *)
-LChiPT := Module[{lpk, lnk, lnv, lna, lds, lpg, lgd, lff, lwf},
+LChiEFT := Module[{lpk, lnk, lnv, lna, lds, lpg, lgd, lff, lwf},
   lpk = LPionKin;     lnk = LNucleonKin;  lnv = LNNVector;   lna = LNNAxial;
   lds = LDeltaSector;
   lpg = LPiNDeltaGIWeakFF;
@@ -1690,4 +1690,4 @@ LChiPT := Module[{lpk, lnk, lnv, lna, lds, lpg, lgd, lff, lwf},
 
   lpk + lnk + lnv + lna + lds + lpg + lgd + lff + lwf];
 
-LTotal := Module[{lchi, lsm}, lchi = LChiPT; lsm = LSM; lchi + lsm];
+LTotal := Module[{lchi, lsm}, lchi = LChiEFT; lsm = LSM; lchi + lsm];

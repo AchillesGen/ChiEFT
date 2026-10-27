@@ -1,36 +1,36 @@
 Notebook[{
-Cell["ChiPT: build the UFO from ChiPT.fr", "Title"],
-Cell["This notebook reproduces the ChiPT_UFO directory and param_card.dat from the FeynRules model file ChiPT.fr. Keep it in the same folder as ChiPT.fr and evaluate the cells from top to bottom.", "Text"],
-Cell["Requirements: Mathematica and FeynRules 2.3.49 with feynrules/feynrules-2.3.49-chipt.patch applied (see README.md; stock FeynRules writes an unusable UFO). Tested with Mathematica 14.3. Python 3 is used in the last step to write the param card.", "Text"],
+Cell["ChiEFT: build the UFO from ChiEFT.fr", "Title"],
+Cell["This notebook reproduces the ChiEFT_UFO directory and param_card.dat from the FeynRules model file ChiEFT.fr. Keep it in the same folder as ChiEFT.fr and evaluate the cells from top to bottom.", "Text"],
+Cell["Requirements: Mathematica and FeynRules 2.3.49 with feynrules/feynrules-2.3.49-chieft.patch applied (see README.md; stock FeynRules writes an unusable UFO). Tested with Mathematica 14.3. Python 3 is used in the last step to write the param card.", "Text"],
 Cell["1. Load FeynRules", "Section"],
 Cell["Edit the path below to point at your patched FeynRules installation.", "Text"],
 Cell["$FeynRulesPath = SetDirectory[FileNameJoin[{$HomeDirectory, \"feynrules-current\"}]];  (* <-- your FeynRules folder *)
 << FeynRules`", "Input"],
 Cell["2. Load the model", "Section"],
-Cell["ChiPTClearCache[] must be called right after LoadModel. Without it the pi-N-Delta vertices pick up spurious Derivative[...][HC] terms.", "Text"],
+Cell["ChiEFTClearCache[] must be called right after LoadModel. Without it the pi-N-Delta vertices pick up spurious Derivative[...][HC] terms.", "Text"],
 Cell["SetDirectory[NotebookDirectory[]];
-LoadModel[\"ChiPT.fr\"];
-ChiPTClearCache[]", "Input"],
+LoadModel[\"ChiEFT.fr\"];
+ChiEFTClearCache[]", "Input"],
 Cell["3. Write the UFO", "Section"],
-Cell["This overwrites the folder ChiPT_UFO. It can take a while (building the Delta sector is the slow part).", "Text"],
+Cell["This overwrites the folder ChiEFT_UFO. It can take a while (building the Delta sector is the slow part).", "Text"],
 Cell["WriteUFO[LTotal,
   AddDecays    -> False,
   FlavorExpand -> True,
   MaxParticles -> 4,
-  Output       -> \"ChiPT_UFO\"];", "Input"],
+  Output       -> \"ChiEFT_UFO\"];", "Input"],
 Cell["FeynRules may print warnings such as \"Form factor ... appears in more than one vertex\" or \"Cannot find particle permutation\". These are expected; the checks below confirm the result.", "Text"],
 Cell["4. Quick checks", "Section"],
 Cell["Expect 190 vertices, 35 form factors and no leftover Derivative/HC terms.", "Text"],
 Cell["SetDirectory[NotebookDirectory[]];
-vtx = Import[FileNameJoin[{\"ChiPT_UFO\", \"vertices.py\"}], \"Text\"];
-ffs = Import[FileNameJoin[{\"ChiPT_UFO\", \"form_factors.py\"}], \"Text\"];
+vtx = Import[FileNameJoin[{\"ChiEFT_UFO\", \"vertices.py\"}], \"Text\"];
+ffs = Import[FileNameJoin[{\"ChiEFT_UFO\", \"form_factors.py\"}], \"Text\"];
 {
  \"vertices\"                         -> StringCount[vtx, \"= Vertex(\"],
  \"form factors (expect 35)\"         -> StringCount[ffs, \"= FormFactor(\"],
  \"Derivative/HC junk (expect 0)\"    -> StringCount[vtx, \"Derivative\"] + StringCount[vtx, \"HC[\"]
 } // Column", "Input"],
 Cell["Form factor leg check. In a form factor argument, -P(-9,n)**2 is Q^2 and needs a gauge boson (spin 3) on leg n, while +P(-9,n)**2 is the Delta's invariant mass and needs a hadron there. Expect 0 mismatches.", "Text"],
-Cell["lor = Import[FileNameJoin[{\"ChiPT_UFO\", \"lorentz.py\"}], \"Text\"];
+Cell["lor = Import[FileNameJoin[{\"ChiEFT_UFO\", \"lorentz.py\"}], \"Text\"];
 legCheck[entry_] := Module[{spins, hits},
   spins = ToExpression /@ StringSplit[
     First@StringCases[entry, \"spins = [\" ~~ s : Except[\"]\"] .. ~~ \"]\" :> s], \",\"];
@@ -44,7 +44,7 @@ res = Flatten[legCheck /@ Select[StringSplit[lor, \"\\n\\n\"], StringContainsQ[#
 Cell["5. Write the param card", "Section"],
 Cell["Writes param_card.dat with the default values stored in the UFO.", "Text"],
 Cell["SetDirectory[NotebookDirectory[]];
-Run[\"python3 -c \\\"import ChiPT_UFO.write_param_card as w; w.ParamCardWriter('param_card.dat', generic=True)\\\"\"]
+Run[\"python3 -c \\\"import ChiEFT_UFO.write_param_card as w; w.ParamCardWriter('param_card.dat', generic=True)\\\"\"]
 (* 0 means success *)", "Input"],
 Cell["Next step: build the Sherpa model and add the form factor plugin, see README.md.", "Text"]
 },

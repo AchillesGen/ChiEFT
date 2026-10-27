@@ -1,4 +1,4 @@
-# ChiPT: π, N and Δ(1232) model
+# ChiEFT: π, N and Δ(1232) model
 
 FeynRules model and UFO for single-pion production on nucleons, from a chiral
 Lagrangian with nucleons and the Δ(1232).
@@ -16,8 +16,8 @@ Lagrangian with nucleons and the Δ(1232).
 
 | Path | |
 |---|---|
-| `ChiPT.fr` | FeynRules model file |
-| `ChiPT_UFO/`, `param_card.dat` | Exported UFO and default param card |
+| `ChiEFT.fr` | FeynRules model file |
+| `ChiEFT_UFO/`, `param_card.dat` | Exported UFO and default param card |
 | `sherpa/FormFactors.C` | Sherpa plugin implementing the form factors |
 | `sherpa/build_model.sh` | Builds and installs the Sherpa model library with the plugin |
 | `sherpa/Sherpa.yaml` | Example run card |
@@ -39,8 +39,8 @@ for runs with a nucleon beam and `PDF_SET: None`, as in `paper/free_nucleon/`.
 sherpa/build_model.sh                  # or: sherpa/build_model.sh /path/to/Sherpa-generate-model
 ```
 
-This runs `Sherpa-generate-model` on `ChiPT_UFO/`, adds `FormFactors.C` to the
-generated library in `ChiPT_UFO/.sherpa/`, then builds and installs it into
+This runs `Sherpa-generate-model` on `ChiEFT_UFO/`, adds `FormFactors.C` to the
+generated library in `ChiEFT_UFO/.sherpa/`, then builds and installs it into
 Sherpa's library directory. `NCORE` sets the number of build jobs (default 4).
 
 - Use this repository's `param_card.dat` (`UFO_PARAM_CARD`), since
@@ -56,7 +56,7 @@ Achilles runs the model through its Sherpa backend. This needs Achilles with
 the Sherpa 3 interface (<Achilles version>; the paper used the `sherpa3-0`
 branch at commit ff313b48).
 
-In Achilles runs with this model, the nucleon form factors are ChiPT's, with
+In Achilles runs with this model, the nucleon form factors are ChiEFT's, with
 parameters from the param card. Achilles registers its own nucleon form
 factors as `AchF1p`, `AchF1n`, `AchF2p`, `AchF2n`, so they don't clash with this
 plugin's `F1p`, `F1n`, `F2p`, `F2n`. Older Achilles builds, including ff313b48,
@@ -71,7 +71,7 @@ Stock FeynRules does not work. Patch a fresh FeynRules 2.3.49:
 curl -LO https://feynrules.irmp.ucl.ac.be/downloads/feynrules-current.tar.gz
 # sha256 85eddac7b5b61eac772c93df93a0c44bc34f531069985a719fe454f0a54afc81
 tar xzf feynrules-current.tar.gz && cd feynrules-current
-patch -p1 < /path/to/ChiPT/feynrules/feynrules-2.3.49-chipt.patch
+patch -p1 < /path/to/ChiEFT/feynrules/feynrules-2.3.49-chieft.patch
 ```
 
 The patch fixes Mathematica 14 compatibility (`Commutator`, `MatrixSymbol`),
@@ -79,26 +79,26 @@ switches to the Python 3 UFO writer, and writes form factors into the Lorentz
 structures (UFO 2.0) instead of the couplings.
 
 Then set the FeynRules path in the first cell of `ExportUFO.nb` and evaluate
-it. It writes `ChiPT_UFO/` and `param_card.dat` and runs basic consistency checks.
+it. It writes `ChiEFT_UFO/` and `param_card.dat` and runs basic consistency checks.
 
 ## Parameters
 
 | Parameter | Block | Default | Meaning |
 |---|---|---|---|
-| `fPi` | CHIPTPION | 0.093 GeV | f_π |
-| `ga` | CHIPTPION | 1.2754 | g_A |
+| `fPi` | CHIEFTPION | 0.093 GeV | f_π |
+| `ga` | CHIEFTPION | 1.2754 | g_A |
 | `MDelta`, `WDelta*` | MASS, DECAY | 1.209, 0.102 GeV | Δ pole mass and fixed width |
-| `GamNPi` | CHIPTDELTA | 0.1014 GeV | Γ(Δ → Nπ), sets `hD` |
-| `GamNGam` | CHIPTDELTA | 0.00057 GeV | Γ(Δ → Nγ), sets G1, G2 |
-| `G2overG1` | CHIPTDELTA | 0.398 | E2/M1 mixing |
-| `LambdaFF` | CHIPTFF | 1.121 GeV | Δ off-shell cutoff Λ |
-| `MADeltaSq` | CHIPTFF | 1.1025 GeV² | N → Δ axial mass² |
-| `CA5Norm` | CHIPTFF | 0 | C5A(0) override (0 = √(2/3) `hD`) |
-| `Sw2FF` | CHIPTFF | 0.23863 | sin²θ_W for NC form factors |
+| `GamNPi` | CHIEFTDELTA | 0.1014 GeV | Γ(Δ → Nπ), sets `hD` |
+| `GamNGam` | CHIEFTDELTA | 0.00057 GeV | Γ(Δ → Nγ), sets G1, G2 |
+| `G2overG1` | CHIEFTDELTA | 0.398 | E2/M1 mixing |
+| `LambdaFF` | CHIEFTFF | 1.121 GeV | Δ off-shell cutoff Λ |
+| `MADeltaSq` | CHIEFTFF | 1.1025 GeV² | N → Δ axial mass² |
+| `CA5Norm` | CHIEFTFF | 0 | C5A(0) override (0 = √(2/3) `hD`) |
+| `Sw2FF` | CHIEFTFF | 0.23863 | sin²θ_W for NC form factors |
 
 Couplings are derived from these, so they follow changes to masses and widths.
-Vector form factors use the Kelly fit (block `CHIPTKELLY`); the nucleon axial
-form factor uses a z-expansion (block `CHIPTZEXP`, plus `t_cut`, `t_0` in `CHIPTFF`).
+Vector form factors use the Kelly fit (block `CHIEFTKELLY`); the nucleon axial
+form factor uses a z-expansion (block `CHIEFTZEXP`, plus `t_cut`, `t_0` in `CHIEFTFF`).
 
 ## Form factors
 
