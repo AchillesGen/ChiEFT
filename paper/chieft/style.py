@@ -49,5 +49,5 @@ def grid22(sharex=True, sharey=True):
 
 # CC1pi channels
 CC_COLOR = {"ppip": "#0057b7", "ppi0": "#93264f", "npip": "#e8820c"}
-BW_LABEL = r"+ Breit--Wigner $M_\Delta, \Gamma_0$, $\Gamma_\Delta \propto k^3$"
+BW_LABEL = r"+ Breit--Wigner $m_\Delta, \Gamma_0$, $\Gamma_\Delta \propto k^3$"
 BW_SHORT = r"+ BW, $\Gamma_\Delta \propto k^3$"

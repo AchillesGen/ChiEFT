@@ -39,7 +39,7 @@ LS_VEC, LS_BW = (0, (1.0, 1.3)), (0, (6.0, 2.0))
 H_OURS = Line2D([], [], color=ps.C_OURS, lw=2.2, label="this work")
 H_VEC = Line2D([], [], color=C_VEC, lw=2.4, ls=LS_VEC, label=r"$+\ \omega,\rho$ exchange")
 H_BW = Line2D([], [], color=C_BW, lw=2.4, ls=LS_BW,
-              label=r"$+$ Breit-Wigner $M_\Delta,\Gamma_0$, $\Gamma_\Delta \propto k^3$")
+              label=r"$+$ Breit–Wigner $m_\Delta,\Gamma_0$, $\Gamma_\Delta \propto k^3$")
 H_DATA = Line2D([], [], color="#7f7f7f", marker="o", markerfacecolor="none", ls="none",
                 ms=3.5, label=r"data (refs.\ in caption)")
 
