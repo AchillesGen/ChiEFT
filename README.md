@@ -1,5 +1,7 @@
 # ChiEFT: π, N and Δ(1232) model
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23767016.svg)](https://doi.org/10.5281/zenodo.23767016)
+
 FeynRules model and UFO for single-pion production on nucleons, from a chiral
 Lagrangian with nucleons and the Δ(1232).
 
@@ -119,6 +121,27 @@ off-shell Δ contributions.
 
 - Fixed Δ width; tree level only; Cabibbo mixing only (V_ud).
 - Planned for v2: multi-pion production, higher resonances, strange baryons.
+
+## Citing
+
+If you use this model, please cite the software and the accompanying paper.
+The software is archived on Zenodo:
+[10.5281/zenodo.23767016](https://doi.org/10.5281/zenodo.23767016). That DOI
+always resolves to the latest release. Each release also has its own DOI,
+listed on the Zenodo page. GitHub's "Cite this repository" button gives the
+same reference, from `CITATION.cff`.
+
+```bibtex
+@software{ChiEFT,
+  author    = {Graham-Jones, Zara and Hoppe, Mareen and Isaacson, Joshua and
+               Li, Shirley Weishi and Toman, Mi{\v s}a},
+  title     = {{ChiEFT: a phenomenological chiral effective field theory model
+               of pion production for neutrino event generators}},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.23767016},
+  url       = {https://doi.org/10.5281/zenodo.23767016}
+}
+```
 
 ## License
 

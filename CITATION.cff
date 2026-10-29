@@ -6,6 +6,7 @@ type: software
 title: "ChiEFT: a phenomenological chiral effective field theory model of pion production for neutrino event generators"
 version: 1.0.0-rc1
 date-released: 2026-10-29
+doi: 10.5281/zenodo.23767016
 license: GPL-3.0-only
 repository-code: "https://github.com/AchillesGen/ChiEFT"
 abstract: >-
