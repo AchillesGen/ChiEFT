@@ -152,13 +152,13 @@ def fig_lineshape(variants):
     fig, ax = ps.newfig()
     egM = (MD ** 2 - MN ** 2) / (2 * MN)
     ax.axvline(egM, color=ps.C_REF, lw=0.8, zorder=1)
-    ax.text(egM - 0.004, 25, r"$W = M_\Delta$", rotation=90, ha="right", va="bottom",
+    ax.text(egM - 0.004, 25, r"$W = m_\Delta$", rotation=90, ha="right", va="bottom",
             color=ps.C_REF, fontsize=ps.FT - 4)
     styles = [("bw_formula", "k", 1.6, (0, (3, 2)),
-               r"unitary Breit-Wigner, $\Gamma_\Delta \propto k^3$"),
-              ("delta_k3", C_BW, 2.2, (0, (6, 2)), r"$\Delta$ only, $\Gamma_\Delta \propto k^3$"),
+               r"Breit–Wigner"),
+              ("delta_k3", C_BW, 2.2, (0, (6, 2)), r"$\Gamma_\Delta \propto k^3$"),
               ("delta_const", ps.C_OURS, 2.2, "-",
-               r"$\Delta$ only, constant $\Gamma_\Delta$ (this work)")]
+               r"constant $\Gamma_\Delta$ (this work)")]
     for z, (name, c, lw, ls, _) in enumerate(styles):
         ax.plot(*curve(variants, "ppi0", x="Egamma", curve=name), color=c, lw=lw, ls=ls,
                 zorder=3 + z)

@@ -53,8 +53,8 @@ Sherpa's library directory. `NCORE` sets the number of build jobs (default 4).
 ### With Achilles
 
 Achilles runs the model through its Sherpa backend. This needs Achilles with
-the Sherpa 3 interface (<Achilles version>; the paper used the `sherpa3-0`
-branch at commit ff313b48).
+the Sherpa 3 interface, currently on the `sherpa3-0` branch. The paper used
+that branch at commit ff313b48.
 
 In Achilles runs with this model, the nucleon form factors are ChiEFT's, with
 parameters from the param card. Achilles registers its own nucleon form

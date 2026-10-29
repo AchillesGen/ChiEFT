@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: >-
+  If you use this model, please cite this software release and the accompanying
+  paper.
+type: software
+title: "ChiEFT: a phenomenological chiral effective field theory model of pion production for neutrino event generators"
+version: 1.0.0-rc1
+date-released: 2026-10-29
+license: GPL-3.0-only
+repository-code: "https://github.com/AchillesGen/ChiEFT"
+abstract: >-
+  A FeynRules model and UFO 2.0 output of a phenomenological chiral effective
+  field theory of pion production, built from nucleons, pions, and the
+  Delta(1232) with gauge-invariant couplings and vertex-level form factors,
+  together with a Sherpa form-factor plugin and the pipeline that produces the
+  figures of the accompanying paper (free-nucleon photoproduction and
+  neutrino-induced pion production, and nuclear predictions with Achilles and
+  NUISANCE).
+keywords:
+  - neutrino
+  - pion production
+  - chiral effective field theory
+  - Delta resonance
+  - event generator
+  - FeynRules
+  - UFO
+  - Sherpa
+  - Achilles
+authors:
+  - family-names: Graham-Jones
+    given-names: Zara
+    orcid: "https://orcid.org/0009-0009-0411-8966"
+    affiliation: "Institute of Particle Physics Phenomenology, Durham University"
+  - family-names: Hoppe
+    given-names: Mareen
+    orcid: "https://orcid.org/0009-0003-0429-2792"
+    affiliation: "TUD Dresden University of Technology"
+  - family-names: Isaacson
+    given-names: Joshua
+    orcid: "https://orcid.org/0000-0001-6164-1707"
+    affiliation: "Michigan State University"
+  - family-names: Li
+    given-names: Shirley Weishi
+    orcid: "https://orcid.org/0000-0002-2157-8982"
+    affiliation: "University of California, Irvine"
+  - family-names: Toman
+    given-names: Miša
+    orcid: "https://orcid.org/0009-0003-2647-1281"
+    affiliation: "University of California, Irvine"
