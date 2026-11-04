@@ -48,3 +48,28 @@ authors:
     given-names: Miša
     orcid: "https://orcid.org/0009-0003-2647-1281"
     affiliation: "University of California, Irvine"
+preferred-citation:
+  type: article
+  title: "Phenomenological Chiral Effective Field Theory for Neutrino Event Generators"
+  authors:
+    - family-names: Graham-Jones
+      given-names: Zara
+      orcid: "https://orcid.org/0009-0009-0411-8966"
+    - family-names: Hoppe
+      given-names: Mareen
+      orcid: "https://orcid.org/0009-0003-0429-2792"
+    - family-names: Isaacson
+      given-names: Joshua
+      orcid: "https://orcid.org/0000-0001-6164-1707"
+    - family-names: Li
+      given-names: Shirley Weishi
+      orcid: "https://orcid.org/0000-0002-2157-8982"
+    - family-names: Toman
+      given-names: Miša
+      orcid: "https://orcid.org/0009-0003-2647-1281"
+  identifiers:
+    - type: doi
+      value: "10.48550/arXiv.2610.40866"
+    - type: url
+      value: "https://arxiv.org/abs/2610.40866"
+  date-released: "2026-10-01"   
