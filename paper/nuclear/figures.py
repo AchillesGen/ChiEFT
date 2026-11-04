@@ -182,7 +182,7 @@ def make(stem, legend_rw, panels):
                             wspace=0.40)
     for ax, (name, xlab, yunit, xlim, annot, leg) in zip(axes.flat, panels):
         ps.style_ax(ax)
-        res = json.load(open(os.path.join(HERE, "results", name + ".json")))
+        res = json.load(open(os.path.join(HERE, "results", name.replace(":", "_") + ".json")))
         panel(fig, ax, res, xlab, yunit, xlim, annot, leg, legend_rw)
         ax.yaxis.set_label_coords(-0.21, 0.5)
         ax.xaxis.set_label_coords(0.5, -0.11)
@@ -195,7 +195,8 @@ def make(stem, legend_rw, panels):
 
 if __name__ == "__main__":
     for stem, (legend_rw, panels) in FIGS.items():
-        if all(os.path.exists(os.path.join(HERE, "results", p[0] + ".json")) for p in panels):
+        if all(os.path.exists(os.path.join(HERE, "results", p[0].replace(":", "_") + ".json"))
+               for p in panels):
             make(stem, legend_rw, panels)
         else:
             print(f"skipping {stem}: results missing")

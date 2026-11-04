@@ -8,8 +8,9 @@
 
     python3 run_nuclear.py analyze [--experiment NAME ...] [--docker]
         Bins the events with NUISANCE, nominal and with the running-width weights,
-        -> results/<sample>.json.  Needs pyNUISANCE; --docker runs this stage in
-        the achilles-physval:chieft image (docker/Dockerfile).
+        -> results/<sample>.json (":" in a name becomes "_").  Needs pyNUISANCE;
+        --docker runs this stage in the achilles-physval:chieft image
+        (docker/Dockerfile).
 """
 import argparse
 import json
@@ -139,7 +140,7 @@ def analyze(cfg, exp):
                "predictions": {
                    "nominal": binned(s, s.weights, scale, smear),
                    "running_width": binned(s, s.weights * weights(s.extra), scale, smear)}}
-        with open(os.path.join(RESULTS, name + ".json"), "w") as f:
+        with open(os.path.join(RESULTS, name.replace(":", "_") + ".json"), "w") as f:
             json.dump(res, f, indent=1)
         print(f"[bin ] {name}: {s.bins.size} events", flush=True)
 

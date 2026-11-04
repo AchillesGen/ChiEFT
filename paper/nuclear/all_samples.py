@@ -61,7 +61,7 @@ def main():
     out = os.path.join(HERE, "plots")
     os.makedirs(out, exist_ok=True)
     for name in [s for e in cfg["experiments"] for s in e["samples"]]:
-        p = os.path.join(HERE, "results", name + ".json")
+        p = os.path.join(HERE, "results", name.replace(":", "_") + ".json")
         if not os.path.exists(p):
             continue
         fig = draw(json.load(open(p)), labels)
