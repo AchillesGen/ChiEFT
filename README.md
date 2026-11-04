@@ -129,7 +129,8 @@ The software is archived on Zenodo:
 [10.5281/zenodo.23767016](https://doi.org/10.5281/zenodo.23767016). That DOI
 always resolves to the latest release. Each release also has its own DOI,
 listed on the Zenodo page. GitHub's "Cite this repository" button gives the
-same reference, from `CITATION.cff`.
+same reference, from `CITATION.cff`. The paper is listed on Inspire under [Phenomenological Chiral Effective Field Theory for Neutrino Event Generators
+](https://inspirehep.net/literature/3221023)
 
 ```bibtex
 @software{ChiEFT,
@@ -140,6 +141,16 @@ same reference, from `CITATION.cff`.
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.23767016},
   url       = {https://doi.org/10.5281/zenodo.23767016}
+}
+@article{Graham-Jones:2026reo,
+    author = "Graham-Jones, Zara and Hoppe, Mareen and Isaacson, Joshua and Li, Shirley Weishi and Toman, Mi{\v{s}}a",
+    title = "{Phenomenological Chiral Effective Field Theory for Neutrino Event Generators}",
+    eprint = "2610.40866",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "UCI-HEP-TR-2026-15, MSUHEP-26-017, MCNET-26-035",
+    month = "10",
+    year = "2026"
 }
 ```
 
